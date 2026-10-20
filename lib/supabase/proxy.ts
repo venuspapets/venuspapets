@@ -23,12 +23,14 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  const isLogin = request.nextUrl.pathname === '/login';
+  const path = request.nextUrl.pathname;
+  const isPublic = path === '/login' || path === '/recuperar' || path === '/auth/callback';
 
-  if (!user && !isLogin) {
+  if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  if (user && isLogin) {
+  // Con sesión abierta no tiene sentido ver el login ni pedir un enlace.
+  if (user && (path === '/login' || path === '/recuperar')) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   return response;

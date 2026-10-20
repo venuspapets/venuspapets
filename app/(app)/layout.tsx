@@ -30,7 +30,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <span>VenuSpa Pets</span>
         </div>
         <nav>
-          <a className="active" href="/">Inicio</a>
+          <a href="/">Inicio</a>
+          <a href="/cuenta">Mi cuenta</a>
         </nav>
         <div className="sidebar-foot">
           <div className="who">

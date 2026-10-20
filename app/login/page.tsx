@@ -36,6 +36,7 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <p className="login-hint"><a href="/recuperar">¿Olvidaste tu contraseña?</a></p>
         <p className="login-hint">Acceso restringido al personal autorizado de VenuSpa Pets.</p>
       </div>
     </main>
