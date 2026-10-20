@@ -115,27 +115,3 @@ export async function savePet(_prev: FormState, fd: FormData): Promise<FormState
   refresh();
   redirect(`/mascotas/${data.id}`);
 }
-
-/* -------------------------------- Vacunas -------------------------------- */
-
-export async function addVaccine(_prev: FormState, fd: FormData): Promise<FormState> {
-  const supabase = await createClient();
-  const name = text(fd, 'name');
-  if (!name) return { error: 'Escribe el nombre de la vacuna.' };
-  const { error } = await supabase.from('vaccines').insert({
-    pet_id: text(fd, 'pet_id'), name,
-    applied_on: dateOrNull(fd, 'applied_on'),
-    next_due: dateOrNull(fd, 'next_due')
-  });
-  if (error) return { error: 'No se pudo agregar la vacuna.' };
-  refresh();
-  return { ok: 'Vacuna agregada.' };
-}
-
-export async function removeVaccine(_prev: FormState, fd: FormData): Promise<FormState> {
-  const supabase = await createClient();
-  const { error } = await supabase.from('vaccines').delete().eq('id', text(fd, 'id'));
-  if (error) return { error: 'No se pudo quitar la vacuna.' };
-  refresh();
-  return { ok: 'Quitada.' };
-}

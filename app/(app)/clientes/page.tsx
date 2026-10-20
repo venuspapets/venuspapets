@@ -25,7 +25,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     <>
       <PageHeader
         title="Clientes y mascotas"
-        description="Aquí registras a los dueños y a sus mascotas: datos de contacto, raza, tamaño, cuidados especiales, vacunas y foto. Busca por nombre del cliente, de la mascota o por WhatsApp, y entra a un cliente para ver o editar sus mascotas."
+        description="Aquí registras a los dueños y a sus mascotas: datos de contacto, raza, tamaño, cuidados especiales y foto. Busca por nombre del cliente, de la mascota o por WhatsApp, y entra a un cliente para ver o editar sus mascotas."
       />
 
       <div className="toolbar">

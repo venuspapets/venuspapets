@@ -19,7 +19,6 @@ Sin funciones exclusivas de una plataforma, para poder cambiar de hosting sin re
 | `settings` | una fila: nombre del negocio, WhatsApp del dueño, dirección, zona horaria, horario, moneda |
 | `owners` | dueños: nombre, WhatsApp, dirección, cumpleaños, consentimiento de mensajes, `referred_by` |
 | `pets` | mascotas: dueño, nombre, raza, tamaño, cumpleaños, temperamento, alergias, corte preferido, frecuencia de baño (días), notas, foto |
-| `vaccines` | mascota, nombre, fecha, próxima fecha |
 | `sizes` | catálogo editable de tamaños (clave, nombre, minutos base) |
 | `services` | nombre, tipo (base/adicional), minutos extra, activo |
 | `service_prices` | servicio × tamaño → precio |
@@ -62,12 +61,12 @@ Cada módulo se termina, se prueba y se despliega antes de pasar al siguiente.
 
 0. **Base:** app Next.js, conexión a Supabase, login, roles, layout, migraciones iniciales, despliegue en Netlify. La demo pasa a `legacy/`.
 1. **Configuración:** negocio, tamaños, servicios y precios, catálogos. Va primero porque los demás módulos dependen de estos datos.
-2. **Clientes y mascotas:** alta, edición, búsqueda, historial, vacunas, fotos.
+2. **Clientes y mascotas:** alta, edición, búsqueda, historial, fotos.
 3. **Agenda:** vista día/semana, crear/mover/cancelar citas, evitar choques de horario por groomer, lista de espera, enlace a Google Calendar.
 4. **Servicios y caja:** registrar la visita (desde una cita o directa), cobro, propina, cierre del día.
 5. **Fidelización automática:** al registrar una visita el sistema evalúa las reglas y **aplica el descuento que corresponda** (contador de baños, cumpleaños, referidos), mostrándolo antes de cobrar. Paquetes prepagados con saldo.
 6. **Ingresos y gastos:** gastos por categoría, compras de insumos, utilidad por rango de fechas, reporte exportable.
-7. **Recordatorios por WhatsApp:** pantalla con los pendientes del día (cita de mañana, baño vencido, cumpleaños, vacuna por vencer, reactivación). Cada uno abre WhatsApp (`wa.me`) con el mensaje ya escrito y se registra como enviado. Es gratis y manual: un clic por mensaje. No hay envío automático sin la API de pago.
+7. **Recordatorios por WhatsApp:** pantalla con los pendientes del día (cita de mañana, baño vencido, cumpleaños, reactivación). Cada uno abre WhatsApp (`wa.me`) con el mensaje ya escrito y se registra como enviado. Es gratis y manual: un clic por mensaje. No hay envío automático sin la API de pago.
 
 ## Cómo se trabaja
 
