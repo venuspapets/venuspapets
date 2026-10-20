@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { logout } from '../login/actions';
+import { supportLink } from '@/lib/contact';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -32,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <nav>
           <a href="/">Inicio</a>
           <a href="/cuenta">Mi cuenta</a>
+          <a href={supportLink} target="_blank" rel="noopener noreferrer">Soporte</a>
         </nav>
         <div className="sidebar-foot">
           <div className="who">

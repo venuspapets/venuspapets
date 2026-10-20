@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { PasswordInput } from '@/components/PasswordInput';
 import { MIN_PASSWORD_LENGTH } from '@/lib/password';
+import { supportLink } from '@/lib/contact';
 import { changePassword } from './actions';
 
 export default function AccountPage() {
@@ -26,6 +27,12 @@ export default function AccountPage() {
             {pending ? 'Guardando…' : 'Cambiar contraseña'}
           </button>
         </form>
+      </section>
+
+      <section className="panel" style={{ marginTop: '1rem' }}>
+        <h2>Soporte</h2>
+        <p className="muted">¿Tienes un problema o una duda con el sistema? Escríbenos por WhatsApp.</p>
+        <a className="btn btn-primary" href={supportLink} target="_blank" rel="noopener noreferrer">Contactar soporte</a>
       </section>
     </>
   );
