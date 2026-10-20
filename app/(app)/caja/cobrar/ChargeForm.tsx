@@ -11,10 +11,10 @@ export type MethodOption = { id: string; name: string };
 type Line = { key: number; service_id: string; name: string; price: string };
 type Pay = { key: number; method_id: string; amount: string };
 
-export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog, methods, initial, petName, bathNumber, suggestions, best }: {
+export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog, methods, initial, petName, bathNumber, suggestions, best, manualCap }: {
   petId: string; appointmentId: string | null; groomerId: string; visitDate: string;
   catalog: CatalogItem[]; methods: MethodOption[]; initial: { service_id: string; name: string; price: number }[];
-  petName: string; bathNumber: number; suggestions: Suggestion[]; best: Suggestion | null;
+  petName: string; bathNumber: number; suggestions: Suggestion[]; best: Suggestion | null; manualCap: number | null;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const nextKey = useRef(100);
@@ -38,7 +38,8 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
   const paid = single ? total : payments.reduce((s, p) => s + pesos(p.amount), 0);
   const remaining = total - paid;
   const needsReason = pct > 0 && !applied;
-  const canSubmit = lines.length > 0 && remaining === 0 && !pending && (!needsReason || reason.trim().length > 0);
+  const overCap = needsReason && manualCap !== null && pct > manualCap;
+  const canSubmit = lines.length > 0 && remaining === 0 && !pending && !overCap && (!needsReason || reason.trim().length > 0);
 
   const apply = (sug: Suggestion) => { setApplied(sug); setDiscount(String(sug.pct)); };
   const clearDiscount = () => { setApplied(null); setDiscount('0'); setReason(''); };
@@ -111,7 +112,8 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
         <div className="field">
           <label htmlFor="reason">Motivo del descuento</label>
           <input id="reason" value={reason} onChange={e => setReason(e.target.value)} placeholder="ej. cliente frecuente, acuerdo especial" />
-          <small className="muted">Es obligatorio porque este descuento no es el sugerido.</small>
+          <small className="muted">Es obligatorio porque este descuento no es el sugerido.{manualCap !== null && ` Máximo permitido: ${manualCap}%.`}</small>
+          {overCap && <p className="msg-error">Solo el administrador puede dar un descuento manual mayor al {manualCap}%.</p>}
         </div>
       )}
 

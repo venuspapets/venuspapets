@@ -62,6 +62,12 @@ export default async function DiscountsPage() {
             <div className="field" style={{ flex: '0 0 140px' }}><label htmlFor="birthday_pct">Descuento (%)</label><input id="birthday_pct" name="birthday_pct" inputMode="decimal" defaultValue={Number(s?.birthday_pct ?? 10)} /></div>
             <div className="field" style={{ flex: '0 0 200px' }}><label htmlFor="birthday_window_days">Días antes y después</label><input id="birthday_window_days" name="birthday_window_days" inputMode="numeric" defaultValue={s?.birthday_window_days ?? 7} /></div>
           </div>
+
+          <h3>Descuento manual</h3>
+          <p className="muted">Un descuento que no es de los sugeridos lo puede dar el administrador sin límite. Quienes no son administradores pueden dar hasta este porcentaje, y siempre con un motivo.</p>
+          <div className="row-form">
+            <div className="field" style={{ flex: '0 0 220px' }}><label htmlFor="groomer_discount_cap">Tope para groomers (%)</label><input id="groomer_discount_cap" name="groomer_discount_cap" inputMode="decimal" defaultValue={Number(s?.groomer_discount_cap ?? 20)} /></div>
+          </div>
         </ActionForm>
       </section>
 

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { parseWhole } from '@/lib/form';
 import { normalizeHours } from '@/lib/hours';
 import { STATUSES } from '@/lib/appointments';
+import { logActivity } from '@/lib/activity';
 import { DAY_NAMES, addDays, isValidDate, timeOf, toMinutes, toStartsAt, weekday } from '@/lib/time';
 
 export type AppointmentState = { error?: string; ok?: string; warnings?: string[] } | null;
@@ -87,6 +88,13 @@ export async function saveAppointment(_prev: AppointmentState, fd: FormData): Pr
       .insert(serviceIds.map(service_id => ({ appointment_id: appointmentId, service_id })));
     if (error) return { error: 'La cita se guardó, pero no se pudieron guardar sus servicios.' };
   }
+
+  const { data: pet } = await supabase.from('pets').select('name').eq('id', pet_id).maybeSingle();
+  await logActivity(supabase, {
+    action: id ? 'cita.editada' : 'cita.creada', entity: 'appointment', entityId: appointmentId,
+    summary: `${id ? 'Editó' : 'Agendó'} la cita de ${pet?.name ?? 'una mascota'} el ${date} a las ${time}${id && status !== 'agendada' ? ` (estado: ${status})` : ''}`,
+    details: { date, time, duration, status, services: serviceIds.length, groomer_id }
+  });
 
   revalidatePath('/agenda', 'layout');
   revalidatePath('/');

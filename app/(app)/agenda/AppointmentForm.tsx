@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { WarningDialog } from '@/components/WarningDialog';
 import { STATUSES } from '@/lib/appointments';
 import { saveAppointment, type AppointmentState } from './actions';
 
@@ -55,14 +56,6 @@ export function AppointmentForm({ pets, services, groomers, values, loyalty }: {
     setDismissed(true);
     timeRef.current?.focus();
   }
-
-  // Esc cierra el aviso, igual que "No, cambiar la hora".
-  useEffect(() => {
-    if (!warnings) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') changeTime(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [warnings]);
 
   return (
     <form ref={formRef} onSubmit={e => { e.preventDefault(); submit(false); }}>
@@ -139,20 +132,11 @@ export function AppointmentForm({ pets, services, groomers, values, loyalty }: {
       </div>
 
       {warnings && (
-        <div className="modal-backdrop" onClick={changeTime}>
-          <div className="modal" role="alertdialog" aria-modal="true" aria-labelledby="warn-title" onClick={e => e.stopPropagation()}>
-            <div className="modal-head">
-              <img src="/gato.svg" alt="" width={48} height={48} />
-              <h2 id="warn-title">Antes de agendar</h2>
-            </div>
-            <ul>{warnings.map(w => <li key={w}>{w}</li>)}</ul>
-            <p><strong>¿Quieres agendar de todos modos?</strong></p>
-            <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={changeTime}>No, cambiar la hora</button>
-              <button type="button" className="btn btn-primary" disabled={pending} onClick={() => submit(true)} autoFocus>Sí, agendar</button>
-            </div>
-          </div>
-        </div>
+        <WarningDialog
+          warnings={warnings} question="¿Quieres agendar de todos modos?"
+          confirmLabel="Sí, agendar" cancelLabel="No, cambiar la hora" pending={pending}
+          onConfirm={() => submit(true)} onCancel={changeTime}
+        />
       )}
     </form>
   );

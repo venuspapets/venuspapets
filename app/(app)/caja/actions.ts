@@ -8,6 +8,8 @@ import { parseWhole, type FormState } from '@/lib/form';
 import { isValidDate } from '@/lib/time';
 import { dayTotals } from '@/lib/caja';
 import { eligibleDiscounts } from '@/lib/discounts';
+import { priceFor } from '@/lib/pricing';
+import { logActivity } from '@/lib/activity';
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? '').trim();
 const refresh = () => {
@@ -18,7 +20,7 @@ const refresh = () => {
 
 /** Los mensajes que escribimos en la base (código P0001) están en español y son seguros de mostrar. */
 const friendly = (error: { code?: string; message: string }, fallback: string) =>
-  error.code === 'P0001' ? error.message : error.code === '23505' ? 'Esta cita ya fue cobrada.' : fallback;
+  error.code === 'P0001' ? error.message.replace(/(\d+)\.00\b/, '$1') : error.code === '23505' ? 'Esta cita ya fue cobrada.' : fallback;
 
 type Payload = {
   pet_id: string; appointment_id: string | null; groomer_id: string | null; visit_date: string;
@@ -42,7 +44,7 @@ export async function registerVisit(_prev: FormState, fd: FormData): Promise<For
   }
 
   // El servidor recalcula qué descuentos corresponden: nunca se confía en lo que envía el navegador.
-  const { data: pet } = await supabase.from('pets').select('id, name, birthdate').eq('id', p.pet_id).maybeSingle();
+  const { data: pet } = await supabase.from('pets').select('id, name, birthdate, breed, size_id').eq('id', p.pet_id).maybeSingle();
   if (!pet) return { error: 'No se encontró la mascota.' };
   const eligible = await eligibleDiscounts(supabase, pet, p.visit_date);
   const reason = String(p.discount_reason ?? '').trim();
@@ -71,6 +73,28 @@ export async function registerVisit(_prev: FormState, fd: FormData): Promise<For
   });
   if (error) return { error: friendly(error, 'No se pudo registrar el cobro.') };
 
+  // Registro de actividad: deja constancia de precios cambiados a mano y del descuento aplicado.
+  const { data: svc } = await supabase.from('services')
+    .select('id, service_prices(size_id, price), service_breed_prices(breed, price)')
+    .in('id', p.items.map(i => i.service_id).filter(Boolean));
+  const priceChanges = p.items.flatMap(i => {
+    const s = svc?.find(x => x.id === i.service_id);
+    const catalog = s ? priceFor(s, pet) : null;
+    return catalog !== null && catalog !== i.price ? [{ name: i.name, catalog, charged: i.price }] : [];
+  });
+  const subtotal = p.items.reduce((sum, i) => sum + i.price, 0);
+  const discountAmount = Math.round(subtotal * p.discount_pct / 100);
+  const flags = [priceChanges.length ? 'precio modificado' : '', discountType === 'manual' ? 'descuento manual' : ''].filter(Boolean);
+  await logActivity(supabase, {
+    action: 'cobro.registrado', entity: 'visit', entityId: id,
+    summary: `Cobró a ${pet.name}: $${(subtotal - discountAmount).toLocaleString('es-CO')}${flags.length ? ` (${flags.join(', ')})` : ''}`,
+    details: {
+      total: subtotal - discountAmount, subtotal, discount_pct: p.discount_pct, discount_amount: discountAmount,
+      discount_type: discountType, discount_label: discountLabel, discount_reason: discountType === 'manual' ? reason : null,
+      price_changes: priceChanges
+    }
+  });
+
   refresh();
   redirect(`/caja/${id}`);
 }
@@ -79,6 +103,13 @@ export async function voidVisit(_prev: FormState, fd: FormData): Promise<FormSta
   const supabase = await requireAdmin();
   const { error } = await supabase.rpc('void_visit', { p_id: text(fd, 'id'), p_reason: text(fd, 'reason') });
   if (error) return { error: friendly(error, 'No se pudo anular el cobro.') };
+  const { data: v } = await supabase.from('visits').select('total, pets(name)').eq('id', text(fd, 'id')).maybeSingle();
+  const petName = (v?.pets as unknown as { name: string } | null)?.name ?? 'una mascota';
+  await logActivity(supabase, {
+    action: 'cobro.anulado', entity: 'visit', entityId: text(fd, 'id'),
+    summary: `Anuló el cobro de ${petName}${v ? ` ($${v.total.toLocaleString('es-CO')})` : ''}`,
+    details: { reason: text(fd, 'reason') }
+  });
   refresh();
   return { ok: 'Cobro anulado.' };
 }
@@ -101,6 +132,11 @@ export async function closeDay(_prev: FormState, fd: FormData): Promise<FormStat
     notes: text(fd, 'notes')
   });
   if (error) return { error: error.code === '23505' ? 'Este día ya está cerrado.' : 'No se pudo cerrar el día.' };
+  await logActivity(supabase, {
+    action: 'caja.cierre', entity: 'cash_closing', entityId: date,
+    summary: `Cerró el día ${date}: ${t.count} servicio(s), $${t.total.toLocaleString('es-CO')}`,
+    details: { total: t.total, expected_cash: t.expectedCash, counted_cash: counted, difference: counted === null ? null : counted - t.expectedCash, notes: text(fd, 'notes') }
+  });
   refresh();
   return { ok: 'Día cerrado.' };
 }
@@ -109,6 +145,7 @@ export async function reopenDay(_prev: FormState, fd: FormData): Promise<FormSta
   const supabase = await requireAdmin();
   const { error } = await supabase.from('cash_closings').delete().eq('closing_date', text(fd, 'date'));
   if (error) return { error: 'No se pudo reabrir el día.' };
+  await logActivity(supabase, { action: 'caja.reapertura', entity: 'cash_closing', entityId: text(fd, 'date'), summary: `Reabrió el cierre del día ${text(fd, 'date')}` });
   refresh();
   return { ok: 'Cierre reabierto.' };
 }

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/PageHeader';
 import { priceFor } from '@/lib/pricing';
 import { eligibleDiscounts } from '@/lib/discounts';
+import { isAdmin } from '@/lib/auth';
 import { dateOf, formatDay, todayStr } from '@/lib/time';
 import { ChargeForm } from './ChargeForm';
 
@@ -61,6 +62,10 @@ export default async function ChargePage({ searchParams }: { searchParams: Promi
     .map(c => ({ service_id: c.id, name: c.name, price: c.price ?? 0 }));
   const visitDate = appt ? dateOf(appt.starts_at) : todayStr();
   const discounts = await eligibleDiscounts(supabase, pet, visitDate);
+  // Quien no es administrador tiene un tope para los descuentos manuales.
+  const admin = await isAdmin();
+  const { data: cfg } = await supabase.from('settings').select('groomer_discount_cap').single();
+  const manualCap = admin ? null : Number(cfg?.groomer_discount_cap ?? 20);
   const owner = pet.owners as unknown as { full_name: string } | null;
   const size = pet.sizes as unknown as { name: string } | null;
 
@@ -81,7 +86,7 @@ export default async function ChargePage({ searchParams }: { searchParams: Promi
           <ChargeForm
             petId={pet.id} appointmentId={appt?.id ?? null} groomerId={appt?.groomer_id ?? user?.id ?? ''} visitDate={visitDate}
             catalog={catalog} methods={methods ?? []} initial={initial}
-            petName={pet.name} bathNumber={discounts.bathNumber} suggestions={discounts.options} best={discounts.best}
+            petName={pet.name} bathNumber={discounts.bathNumber} suggestions={discounts.options} best={discounts.best} manualCap={manualCap}
           />
         </section>
       )}

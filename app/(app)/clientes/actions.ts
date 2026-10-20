@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { parseWhole, type FormState } from '@/lib/form';
+import { parseWhole, type FormState, type WarnState } from '@/lib/form';
 import { normalizePhone } from '@/lib/phone';
+import { logActivity } from '@/lib/activity';
 
 const BUCKET = 'pet-photos';
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
@@ -18,7 +19,7 @@ const refresh = () => revalidatePath('/clientes', 'layout');
 
 /* -------------------------------- Dueños -------------------------------- */
 
-export async function saveOwner(_prev: FormState, fd: FormData): Promise<FormState> {
+export async function saveOwner(_prev: WarnState, fd: FormData): Promise<WarnState> {
   const supabase = await createClient();
   const id = text(fd, 'id');
   const full_name = text(fd, 'full_name');
@@ -39,14 +40,39 @@ export async function saveOwner(_prev: FormState, fd: FormData): Promise<FormSta
     notes: text(fd, 'notes')
   };
 
+  // Aviso (no bloquea) si el WhatsApp o el nombre ya existen en otro cliente.
+  let before: { whatsapp: string; full_name: string } | null = null;
+  if (id) {
+    const { data } = await supabase.from('owners').select('whatsapp, full_name').eq('id', id).maybeSingle();
+    before = data;
+  }
+  if (fd.get('confirm') !== '1') {
+    const warnings: string[] = [];
+    if (whatsapp && before?.whatsapp !== whatsapp) {
+      let q = supabase.from('owners').select('full_name').eq('whatsapp', whatsapp).limit(3);
+      if (id) q = q.neq('id', id);
+      const { data: same } = await q;
+      if (same?.length) warnings.push(`Ya existe un cliente con este WhatsApp: ${same.map(o => o.full_name).join(', ')}.`);
+    }
+    if (!before || before.full_name.toLowerCase() !== full_name.toLowerCase()) {
+      let q = supabase.from('owners').select('id').ilike('full_name', full_name.replace(/[%_\\]/g, m => '\\' + m)).limit(1);
+      if (id) q = q.neq('id', id);
+      const { data: sameName } = await q;
+      if (sameName?.length) warnings.push(`Ya existe un cliente llamado “${full_name}”.`);
+    }
+    if (warnings.length) return { warnings };
+  }
+
   if (id) {
     const { error } = await supabase.from('owners').update({ ...row, active: fd.get('active') === 'on' }).eq('id', id);
     if (error) return { error: 'No se pudo guardar.' };
+    await logActivity(supabase, { action: 'cliente.editado', entity: 'owner', entityId: id, summary: `Editó al cliente ${full_name}`, details: { ...row, active: fd.get('active') === 'on' } });
     refresh();
     return { ok: 'Cliente guardado.' };
   }
   const { data, error } = await supabase.from('owners').insert(row).select('id').single();
   if (error) return { error: 'No se pudo crear el cliente.' };
+  await logActivity(supabase, { action: 'cliente.creado', entity: 'owner', entityId: data.id, summary: `Creó al cliente ${full_name}`, details: row });
   refresh();
   redirect(`/clientes/${data.id}`);
 }
@@ -102,6 +128,7 @@ export async function savePet(_prev: FormState, fd: FormData): Promise<FormState
     }
     const { error } = await supabase.from('pets').update(patch).eq('id', id);
     if (error) return { error: 'No se pudo guardar.' };
+    await logActivity(supabase, { action: 'mascota.editada', entity: 'pet', entityId: id, summary: `Editó a la mascota ${name}`, details: { ...row, photo_changed: hasPhoto } });
     refresh();
     return { ok: 'Mascota guardada.' };
   }
@@ -112,6 +139,7 @@ export async function savePet(_prev: FormState, fd: FormData): Promise<FormState
     const up = await uploadPhoto(supabase, data.id, photo, null);
     if (up.path) await supabase.from('pets').update({ photo_path: up.path }).eq('id', data.id);
   }
+  await logActivity(supabase, { action: 'mascota.creada', entity: 'pet', entityId: data.id, summary: `Creó a la mascota ${name}`, details: row });
   refresh();
   redirect(`/mascotas/${data.id}`);
 }

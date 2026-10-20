@@ -6,3 +6,6 @@ export function parseWhole(value: FormDataEntryValue | null): number | null {
   if (!/^\d+$/.test(text)) return null;
   return Number(text);
 }
+
+/** Como FormState, pero puede devolver avisos que el usuario decide si ignora. */
+export type WarnState = { error?: string; ok?: string; warnings?: string[] } | null;
