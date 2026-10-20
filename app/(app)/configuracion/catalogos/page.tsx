@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { ActionForm } from '@/components/ActionForm';
 import { saveCatalogItem } from '../actions';
 
-type Item = { id: string; name: string; active: boolean };
+type Item = { id: string; name: string; active: boolean; is_cash?: boolean };
 
 function Catalog({ title, help, table, items, example }: {
   title: string; help: string; table: string; items: Item[]; example: string;
@@ -17,6 +17,7 @@ function Catalog({ title, help, table, items, example }: {
           <input type="hidden" name="table" value={table} />
           <input type="hidden" name="id" value={i.id} />
           <div className="field"><input name="name" defaultValue={i.name} required aria-label="Nombre" /></div>
+          {table === 'payment_methods' && <label className="check"><input type="checkbox" name="is_cash" defaultChecked={i.is_cash} /> Es efectivo</label>}
           <label className="check"><input type="checkbox" name="active" defaultChecked={i.active} /> Activo</label>
         </ActionForm>
       ))}
@@ -24,6 +25,7 @@ function Catalog({ title, help, table, items, example }: {
       <ActionForm action={saveCatalogItem} className="row-form" submitLabel="Agregar">
         <input type="hidden" name="table" value={table} />
         <div className="field"><input name="name" placeholder={example} required aria-label="Nuevo nombre" /></div>
+        {table === 'payment_methods' && <label className="check"><input type="checkbox" name="is_cash" /> Es efectivo</label>}
       </ActionForm>
     </section>
   );
@@ -32,7 +34,7 @@ function Catalog({ title, help, table, items, example }: {
 export default async function CatalogsPage() {
   const supabase = await createClient();
   const [{ data: methods }, { data: categories }] = await Promise.all([
-    supabase.from('payment_methods').select('id, name, active').order('sort_order'),
+    supabase.from('payment_methods').select('id, name, active, is_cash').order('sort_order'),
     supabase.from('expense_categories').select('id, name, active').order('sort_order')
   ]);
 
@@ -44,7 +46,7 @@ export default async function CatalogsPage() {
       />
       <Catalog
         title="Medios de pago" table="payment_methods" items={methods ?? []} example="ej. Nequi"
-        help="Se ofrecen al cobrar un servicio o vender un paquete."
+        help="Se ofrecen al cobrar un servicio. Marca “Es efectivo” en el que se cuenta físicamente en la caja: el cierre del día lo usa para calcular el efectivo esperado."
       />
       <Catalog
         title="Categorías de gastos" table="expense_categories" items={categories ?? []} example="ej. Seguros"

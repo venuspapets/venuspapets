@@ -79,11 +79,14 @@ export async function saveCatalogItem(_prev: FormState, fd: FormData): Promise<F
   if (!name) return { error: 'El nombre es obligatorio.' };
 
   if (id) {
-    const { error } = await supabase.from(table).update({ name, active: fd.get('active') === 'on' }).eq('id', id);
+    const patch: Record<string, unknown> = { name, active: fd.get('active') === 'on' };
+    if (table === 'payment_methods') patch.is_cash = fd.get('is_cash') === 'on';
+    const { error } = await supabase.from(table).update(patch).eq('id', id);
     return error ? failed('No se pudo guardar.', error.code) : done('Guardado.');
   }
   const { data: last } = await supabase.from(table).select('sort_order').order('sort_order', { ascending: false }).limit(1);
-  const { error } = await supabase.from(table).insert({ name, sort_order: (last?.[0]?.sort_order ?? 0) + 1 });
+  const extra = table === 'payment_methods' ? { is_cash: fd.get('is_cash') === 'on' } : {};
+  const { error } = await supabase.from(table).insert({ name, sort_order: (last?.[0]?.sort_order ?? 0) + 1, ...extra });
   return error ? failed('No se pudo crear.', error.code) : done('Agregado.');
 }
 
