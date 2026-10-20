@@ -45,6 +45,19 @@ export function AppointmentForm({ pets, services, groomers, values }: {
 
   const warnings = state?.warnings && !dismissed ? state.warnings : null;
 
+  function changeTime() {
+    setDismissed(true);
+    timeRef.current?.focus();
+  }
+
+  // Esc cierra el aviso, igual que "No, cambiar la hora".
+  useEffect(() => {
+    if (!warnings) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') changeTime(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [warnings]);
+
   return (
     <form ref={formRef} onSubmit={e => { e.preventDefault(); submit(false); }}>
       {values.id && <input type="hidden" name="id" value={values.id} />}
@@ -107,21 +120,26 @@ export function AppointmentForm({ pets, services, groomers, values }: {
       {state?.error && <div className="login-error" role="alert">{state.error}</div>}
       {state?.ok && <div className="login-ok" role="status">{state.ok}</div>}
 
-      {warnings ? (
-        <div className="alert-warn" role="alertdialog" aria-label="Aviso antes de agendar">
-          <strong>Antes de agendar</strong>
-          <ul>{warnings.map(w => <li key={w}>{w}</li>)}</ul>
-          <p>¿Quieres agendar de todos modos?</p>
-          <div className="form-actions">
-            <button type="button" className="btn btn-primary" disabled={pending} onClick={() => submit(true)}>Sí, agendar</button>
-            <button type="button" className="btn btn-ghost" onClick={() => { setDismissed(true); timeRef.current?.focus(); }}>No, cambiar la hora</button>
+      <div className="form-actions">
+        <button type="submit" className="btn btn-primary" disabled={pending}>
+          {pending ? 'Guardando…' : values.id ? 'Guardar cita' : 'Agendar cita'}
+        </button>
+      </div>
+
+      {warnings && (
+        <div className="modal-backdrop" onClick={changeTime}>
+          <div className="modal" role="alertdialog" aria-modal="true" aria-labelledby="warn-title" onClick={e => e.stopPropagation()}>
+            <div className="modal-head">
+              <img src="/gato.svg" alt="" width={48} height={48} />
+              <h2 id="warn-title">Antes de agendar</h2>
+            </div>
+            <ul>{warnings.map(w => <li key={w}>{w}</li>)}</ul>
+            <p><strong>¿Quieres agendar de todos modos?</strong></p>
+            <div className="form-actions">
+              <button type="button" className="btn btn-ghost" onClick={changeTime}>No, cambiar la hora</button>
+              <button type="button" className="btn btn-primary" disabled={pending} onClick={() => submit(true)} autoFocus>Sí, agendar</button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={pending}>
-            {pending ? 'Guardando…' : values.id ? 'Guardar cita' : 'Agendar cita'}
-          </button>
         </div>
       )}
     </form>

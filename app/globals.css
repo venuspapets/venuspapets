@@ -60,7 +60,13 @@ h1 { margin: 0 0 .5rem; }
 .row-form .field { margin-bottom: 0; flex: 1 1 140px; }
 .row-form .field input, .field select { width: 100%; padding: .65rem .8rem; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #fff; }
 .row-form .form-actions { display: flex; align-items: center; gap: .6rem; }
-.check { display: flex; align-items: center; gap: .4rem; padding-bottom: .65rem; font-size: .9rem; }
+.check, .field label.check { display: flex; align-items: center; gap: .6rem; margin: 0; padding-bottom: .65rem; font-size: .95rem; color: var(--text); cursor: pointer; }
+/* Interruptor de encendido/apagado para todas las casillas de la app */
+.check > input[type='checkbox'] { -webkit-appearance: none; appearance: none; flex: none; position: relative; width: 2.5rem; height: 1.4rem; margin: 0; padding: 0; border: 0; border-radius: 999px; background: #d4d0de; cursor: pointer; transition: background .2s; }
+.check > input[type='checkbox']::after { content: ''; position: absolute; top: .15rem; left: .15rem; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s; }
+.check > input[type='checkbox']:checked { background: var(--brand); }
+.check > input[type='checkbox']:checked::after { transform: translateX(1.1rem); }
+.check > input[type='checkbox']:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .form-actions { display: flex; align-items: center; gap: .6rem; margin-top: .4rem; }
 .row-form .form-actions { margin-top: 0; }
 .msg-ok { color: #067647; font-size: .85rem; }
@@ -122,9 +128,14 @@ textarea { width: 100%; padding: .65rem .8rem; border: 1px solid var(--line); bo
 .services-box { border: 1px solid var(--line); border-radius: 12px; padding: .75rem 1rem; }
 .services-box legend { color: var(--muted); font-size: .9rem; padding: 0 .4rem; }
 .services-box .check { padding-bottom: .3rem; }
-.alert-warn { background: #fffaeb; border: 1px solid #fec84b; border-radius: 12px; padding: .9rem 1rem; margin: .5rem 0 1rem; }
-.alert-warn ul { margin: .4rem 0; padding-left: 1.2rem; }
-.alert-warn p { margin: .4rem 0; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 1rem; background: rgba(31, 27, 46, .55); }
+.modal { width: 100%; max-width: 440px; background: #fff; border-radius: 20px; padding: 1.5rem; box-shadow: 0 24px 70px rgba(0, 0, 0, .35); animation: pop .15s ease-out; }
+.modal-head { display: flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+.modal-head h2 { margin: 0; font-size: 1.15rem; }
+.modal ul { margin: .5rem 0; padding-left: 1.2rem; line-height: 1.45; }
+.modal p { margin: .5rem 0 1rem; }
+.modal .form-actions { justify-content: flex-end; flex-wrap: wrap; }
+@keyframes pop { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 @media (max-width: 900px) { .week-grid { grid-template-columns: 1fr; } }
 
