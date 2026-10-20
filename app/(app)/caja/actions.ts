@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/auth';
 import { parseWhole, type FormState } from '@/lib/form';
 import { isValidDate } from '@/lib/time';
 import { dayTotals } from '@/lib/caja';
+import { eligibleDiscounts } from '@/lib/discounts';
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? '').trim();
 const refresh = () => {
@@ -21,7 +22,7 @@ const friendly = (error: { code?: string; message: string }, fallback: string) =
 
 type Payload = {
   pet_id: string; appointment_id: string | null; groomer_id: string | null; visit_date: string;
-  discount_pct: number; notes: string;
+  discount_pct: number; discount_type: string | null; discount_label: string | null; discount_reason: string; notes: string;
   items: { service_id: string; name: string; price: number }[];
   payments: { method_id: string; amount: number }[];
 };
@@ -40,10 +41,32 @@ export async function registerVisit(_prev: FormState, fd: FormData): Promise<For
     return { error: 'Revisa los pagos: deben ser números enteros.' };
   }
 
+  // El servidor recalcula qué descuentos corresponden: nunca se confía en lo que envía el navegador.
+  const { data: pet } = await supabase.from('pets').select('id, name, birthdate').eq('id', p.pet_id).maybeSingle();
+  if (!pet) return { error: 'No se encontró la mascota.' };
+  const eligible = await eligibleDiscounts(supabase, pet, p.visit_date);
+  const reason = String(p.discount_reason ?? '').trim();
+  let discountType: string | null = null;
+  let discountLabel: string | null = null;
+  if (p.discount_pct > 0) {
+    const match = eligible.options.find(o => o.type === p.discount_type && o.label === p.discount_label && o.pct === p.discount_pct);
+    if (match) {
+      discountType = match.type;
+      discountLabel = match.label;
+    } else {
+      if (!reason) return { error: 'Escribe el motivo del descuento: es distinto al sugerido.' };
+      discountType = 'manual';
+      discountLabel = 'Manual';
+    }
+  }
+
   const id = crypto.randomUUID();
   const { error } = await supabase.rpc('register_visit', {
     p_id: id, p_pet_id: p.pet_id, p_appointment_id: p.appointment_id || null, p_groomer_id: p.groomer_id || null,
-    p_visit_date: p.visit_date, p_discount_pct: p.discount_pct, p_notes: p.notes ?? '',
+    p_visit_date: p.visit_date, p_discount_pct: p.discount_pct,
+    p_discount_type: discountType, p_discount_label: discountLabel, p_discount_reason: discountType === 'manual' ? reason : null,
+    p_suggested_pct: eligible.best?.pct ?? null, p_suggested_label: eligible.best?.label ?? null,
+    p_notes: p.notes ?? '',
     p_items: p.items, p_payments: p.payments
   });
   if (error) return { error: friendly(error, 'No se pudo registrar el cobro.') };

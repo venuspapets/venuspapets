@@ -26,7 +26,7 @@ export default async function AppointmentPage({ params }: { params: Promise<{ id
   // Si la mascota ya no está activa, igual debe aparecer para poder editar la cita.
   const pets = options.pets.some(p => p.id === pet.id)
     ? options.pets
-    : [...options.pets, { id: pet.id, label: `${pet.name} (${pet.owners.full_name})`, baseMinutes: 60 }];
+    : [...options.pets, { id: pet.id, label: `${pet.name} (${pet.owners.full_name})`, baseMinutes: 60, name: pet.name, baths: 0 }];
 
   const reminder = `Hola ${pet.owners.full_name.split(' ')[0]}, te recordamos la cita de ${pet.name} el ${formatDay(date)} a las ${time}. ¡Los esperamos!`;
 
@@ -46,7 +46,7 @@ export default async function AppointmentPage({ params }: { params: Promise<{ id
       )}
       <section className="panel wide">
         <AppointmentForm
-          pets={pets} services={options.services} groomers={options.groomers}
+          pets={pets} services={options.services} groomers={options.groomers} loyalty={options.loyalty}
           values={{
             id: appt.id, pet_id: appt.pet_id, date, time, duration: appt.duration_minutes,
             groomer_id: appt.groomer_id ?? options.groomers[0]?.id ?? '', service_ids: serviceIds,

@@ -150,3 +150,50 @@ export async function removeBreedPrice(_prev: FormState, fd: FormData): Promise<
   const { error } = await supabase.from('service_breed_prices').delete().eq('id', text(fd, 'id'));
   return error ? failed('No se pudo quitar.') : done('Quitado.');
 }
+
+/* ------------------------------- Descuentos ------------------------------- */
+
+const pctValue = (v: FormDataEntryValue | null) => {
+  const n = Number(String(v ?? '').replace(',', '.'));
+  return Number.isFinite(n) && n > 0 && n <= 100 ? Math.round(n * 100) / 100 : null;
+};
+
+export async function saveDiscountRules(_prev: FormState, fd: FormData): Promise<FormState> {
+  const supabase = await requireAdmin();
+  const loyalty_every = parseWhole(fd.get('loyalty_every'));
+  const loyalty_pct = pctValue(fd.get('loyalty_pct'));
+  const birthday_pct = pctValue(fd.get('birthday_pct'));
+  const window = parseWhole(fd.get('birthday_window_days'));
+  if (!loyalty_every) return { error: 'Los baños para el descuento deben ser un número mayor que 0.' };
+  if (loyalty_pct === null || birthday_pct === null) return { error: 'Los porcentajes deben estar entre 0 y 100.' };
+  if (window === null || window > 30) return { error: 'Los días de cumpleaños deben estar entre 0 y 30.' };
+
+  const { error } = await supabase.from('settings').update({
+    loyalty_enabled: fd.get('loyalty_enabled') === 'on', loyalty_every, loyalty_pct,
+    birthday_enabled: fd.get('birthday_enabled') === 'on', birthday_pct, birthday_window_days: window
+  }).eq('id', true);
+  return error ? failed('No se pudo guardar.') : done('Reglas guardadas.');
+}
+
+export async function savePromotion(_prev: FormState, fd: FormData): Promise<FormState> {
+  const supabase = await requireAdmin();
+  const id = text(fd, 'id');
+  const name = text(fd, 'name');
+  const pct = pctValue(fd.get('pct'));
+  const starts_on = text(fd, 'starts_on');
+  const ends_on = text(fd, 'ends_on');
+  if (!name) return { error: 'Ponle un nombre a la promoción.' };
+  if (pct === null) return { error: 'El porcentaje debe estar entre 0 y 100.' };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(starts_on) || !/^\d{4}-\d{2}-\d{2}$/.test(ends_on)) return { error: 'Elige la fecha de inicio y la de fin.' };
+  if (ends_on < starts_on) return { error: 'La fecha de fin no puede ser anterior a la de inicio.' };
+
+  const row = { name, pct, starts_on, ends_on, active: id ? fd.get('active') === 'on' : true };
+  const { error } = id ? await supabase.from('promotions').update(row).eq('id', id) : await supabase.from('promotions').insert(row);
+  return error ? failed('No se pudo guardar la promoción.') : done(id ? 'Promoción guardada.' : 'Promoción creada.');
+}
+
+export async function removePromotion(_prev: FormState, fd: FormData): Promise<FormState> {
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from('promotions').delete().eq('id', text(fd, 'id'));
+  return error ? failed('No se pudo quitar.') : done('Promoción quitada.');
+}

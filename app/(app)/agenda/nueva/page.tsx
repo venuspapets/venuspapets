@@ -7,7 +7,7 @@ import { loadFormOptions } from '../options';
 
 export default async function NewAppointmentPage({ searchParams }: { searchParams: Promise<{ fecha?: string; hora?: string; mascota?: string }> }) {
   const params = await searchParams;
-  const { pets, services, groomers, currentUserId } = await loadFormOptions();
+  const { pets, services, groomers, currentUserId, loyalty } = await loadFormOptions();
   const date = isValidDate(params.fecha) ? params.fecha : todayStr();
   const time = /^\d{2}:\d{2}$/.test(params.hora ?? '') ? params.hora! : '09:00';
 
@@ -26,7 +26,7 @@ export default async function NewAppointmentPage({ searchParams }: { searchParam
       ) : (
         <section className="panel wide">
           <AppointmentForm
-            pets={pets} services={services} groomers={groomers}
+            pets={pets} services={services} groomers={groomers} loyalty={loyalty}
             values={{
               pet_id: params.mascota ?? '', date, time, duration: 60,
               groomer_id: groomers.find(g => g.id === currentUserId)?.id ?? groomers[0]?.id ?? '',

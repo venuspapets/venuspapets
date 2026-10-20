@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { STATUSES } from '@/lib/appointments';
 import { saveAppointment, type AppointmentState } from './actions';
 
-export type PetOption = { id: string; label: string; baseMinutes: number };
+export type PetOption = { id: string; label: string; baseMinutes: number; name: string; baths: number };
+export type Loyalty = { enabled: boolean; every: number; pct: number };
 export type ServiceOption = { id: string; name: string; extraMinutes: number };
 export type GroomerOption = { id: string; name: string };
 export type AppointmentValues = {
@@ -12,8 +13,8 @@ export type AppointmentValues = {
   groomer_id: string; service_ids: string[]; notes: string; status: string;
 };
 
-export function AppointmentForm({ pets, services, groomers, values }: {
-  pets: PetOption[]; services: ServiceOption[]; groomers: GroomerOption[]; values: AppointmentValues;
+export function AppointmentForm({ pets, services, groomers, values, loyalty }: {
+  pets: PetOption[]; services: ServiceOption[]; groomers: GroomerOption[]; values: AppointmentValues; loyalty: Loyalty;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const timeRef = useRef<HTMLInputElement>(null);
@@ -43,6 +44,11 @@ export function AppointmentForm({ pets, services, groomers, values }: {
     });
   }
 
+  // Si la cita ya fue atendida, su baño ya está contado: no se anuncia el siguiente.
+  const selectedPet = pets.find(p => p.id === petId);
+  const nextBath = selectedPet && values.status !== 'atendida' ? selectedPet.baths + 1 : null;
+  const rewarded = nextBath !== null && loyalty.enabled && nextBath % loyalty.every === 0;
+
   const warnings = state?.warnings && !dismissed ? state.warnings : null;
 
   function changeTime() {
@@ -69,6 +75,12 @@ export function AppointmentForm({ pets, services, groomers, values }: {
             <option value="">— Elige una mascota —</option>
             {pets.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
+          {selectedPet && nextBath !== null && (
+            <div className={rewarded ? 'info-box info-reward' : 'info-box'}>
+              Este es el baño número <strong>{nextBath}</strong> de {selectedPet.name}.
+              {rewarded && <> Le corresponde un descuento sugerido de <strong>{loyalty.pct}%</strong> por fidelización.</>}
+            </div>
+          )}
         </div>
         {groomers.length > 1 ? (
           <div className="field">

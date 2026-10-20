@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from 'react';
 import { money, pesos } from '@/lib/money';
 import type { FormState } from '@/lib/form';
+import type { Suggestion } from '@/lib/discounts';
 import { registerVisit } from '../actions';
 
 export type CatalogItem = { id: string; name: string; price: number | null };
@@ -10,9 +11,10 @@ export type MethodOption = { id: string; name: string };
 type Line = { key: number; service_id: string; name: string; price: string };
 type Pay = { key: number; method_id: string; amount: string };
 
-export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog, methods, initial }: {
+export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog, methods, initial, petName, bathNumber, suggestions, best }: {
   petId: string; appointmentId: string | null; groomerId: string; visitDate: string;
   catalog: CatalogItem[]; methods: MethodOption[]; initial: { service_id: string; name: string; price: number }[];
+  petName: string; bathNumber: number; suggestions: Suggestion[]; best: Suggestion | null;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const nextKey = useRef(100);
@@ -21,6 +23,8 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
 
   const [lines, setLines] = useState<Line[]>(initial.map((l, i) => ({ key: i, service_id: l.service_id, name: l.name, price: String(l.price) })));
   const [discount, setDiscount] = useState('0');
+  const [applied, setApplied] = useState<Suggestion | null>(null);
+  const [reason, setReason] = useState('');
   const [payments, setPayments] = useState<Pay[]>([{ key: 0, method_id: methods[0]?.id ?? '', amount: '' }]);
   const [notes, setNotes] = useState('');
 
@@ -33,7 +37,11 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
   const single = payments.length === 1;
   const paid = single ? total : payments.reduce((s, p) => s + pesos(p.amount), 0);
   const remaining = total - paid;
-  const canSubmit = lines.length > 0 && remaining === 0 && !pending;
+  const needsReason = pct > 0 && !applied;
+  const canSubmit = lines.length > 0 && remaining === 0 && !pending && (!needsReason || reason.trim().length > 0);
+
+  const apply = (sug: Suggestion) => { setApplied(sug); setDiscount(String(sug.pct)); };
+  const clearDiscount = () => { setApplied(null); setDiscount('0'); setReason(''); };
 
   const addLine = (id: string) => {
     const s = catalog.find(c => c.id === id);
@@ -46,6 +54,9 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
     fd.set('payload', JSON.stringify({
       pet_id: petId, appointment_id: appointmentId, groomer_id: groomerId, visit_date: visitDate,
       discount_pct: pct, notes,
+      discount_type: applied?.type ?? (pct > 0 ? 'manual' : null),
+      discount_label: applied?.label ?? (pct > 0 ? 'Manual' : null),
+      discount_reason: needsReason ? reason.trim() : '',
       items: lines.map(l => ({ service_id: l.service_id, name: l.name, price: pesos(l.price) })),
       payments: (single ? [{ ...payments[0], amount: String(total) }] : payments)
         .map(p => ({ method_id: p.method_id, amount: pesos(p.amount) })).filter(p => p.amount > 0)
@@ -76,13 +87,33 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
       </div>
 
       <h2>Descuento</h2>
+      <div className="info-box">Este es el baño número <strong>{bathNumber}</strong> de {petName}.</div>
+      {suggestions.map(sug => (
+        <div className={applied === sug ? 'suggest suggest-on' : 'suggest'} key={sug.type + sug.label}>
+          <span>
+            {sug === best && <span className="badge badge-ok">Sugerido</span>} <strong>{sug.pct}%</strong> · {sug.label}
+          </span>
+          {applied === sug
+            ? <button type="button" className="btn btn-ghost" onClick={clearDiscount}>Quitar</button>
+            : <button type="button" className="btn btn-primary" onClick={() => apply(sug)}>Aplicar</button>}
+        </div>
+      ))}
+      {suggestions.length === 0 && <p className="muted">No hay descuento sugerido para este cobro. Si quieres dar uno, escribe el porcentaje.</p>}
       <div className="row-form">
         <div className="field" style={{ flex: '0 0 140px' }}>
           <label htmlFor="discount">Porcentaje (%)</label>
-          <input id="discount" value={discount} inputMode="decimal" onChange={e => setDiscount(e.target.value)} />
+          <input id="discount" value={discount} inputMode="decimal"
+            onChange={e => { setDiscount(e.target.value); if (applied && Number(e.target.value.replace(',', '.')) !== applied.pct) setApplied(null); }} />
         </div>
         <span className="muted">{pct > 0 ? `Equivale a ${money(discountAmount)} de descuento` : 'Sin descuento'}</span>
       </div>
+      {needsReason && (
+        <div className="field">
+          <label htmlFor="reason">Motivo del descuento</label>
+          <input id="reason" value={reason} onChange={e => setReason(e.target.value)} placeholder="ej. cliente frecuente, acuerdo especial" />
+          <small className="muted">Es obligatorio porque este descuento no es el sugerido.</small>
+        </div>
+      )}
 
       <div className="totals">
         <div><span>Subtotal</span><span>{money(subtotal)}</span></div>

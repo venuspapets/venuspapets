@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { buildReport, defaultRange, rangeTooLong } from '@/lib/caja';
 import { money } from '@/lib/money';
+import { DISCOUNT_TYPE_LABELS } from '@/lib/discounts';
 import { formatShortDay, isValidDate, todayStr } from '@/lib/time';
 import { PrintButton } from './PrintButton';
 
@@ -48,8 +49,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
             <table className="table">
               <thead>
                 <tr>
-                  <th>Fecha</th><th>Servicios</th><th>Total</th>
+                  <th>Fecha</th><th>Servicios</th><th>Total</th><th>Descuentos</th>
                   {report.methods.map(m => <th key={m}>{m}</th>)}
+                  {report.discountTypes.map(t => <th key={t}>Desc. {DISCOUNT_TYPE_LABELS[t]}</th>)}
                   <th>Efectivo esperado</th><th>Efectivo contado</th><th>Diferencia</th><th>Cierre</th>
                 </tr>
               </thead>
@@ -59,7 +61,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                     <td><Link href={`/caja?fecha=${d.date}`}>{formatShortDay(d.date)}</Link></td>
                     <td>{d.count}{d.voidedCount > 0 && <span className="muted"> (+{d.voidedCount} anulado{d.voidedCount > 1 ? 's' : ''})</span>}</td>
                     <td>{money(d.total)}</td>
+                    <td>{money(d.discountTotal)}</td>
                     {report.methods.map(m => <td key={m}>{money(d.byMethod[m] ?? 0)}</td>)}
+                    {report.discountTypes.map(t => <td key={t}>{money(d.discountByType[t] ?? 0)}</td>)}
                     <td>{money(d.expectedCash)}</td>
                     <td>{d.counted === null ? '—' : money(d.counted)}</td>
                     <td className={d.difference ? 'msg-error' : ''}>{d.difference === null ? '—' : money(d.difference)}</td>
@@ -69,13 +73,29 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </tbody>
               <tfoot>
                 <tr>
-                  <th>Total</th><th>{report.totals.count}</th><th>{money(report.totals.total)}</th>
+                  <th>Total</th><th>{report.totals.count}</th><th>{money(report.totals.total)}</th><th>{money(report.totals.discountTotal)}</th>
                   {report.methods.map(m => <th key={m}>{money(report.totals.byMethod[m] ?? 0)}</th>)}
+                  {report.discountTypes.map(t => <th key={t}>{money(report.totals.discountByType[t] ?? 0)}</th>)}
                   <th>{money(report.totals.expectedCash)}</th><th /><th /><th />
                 </tr>
               </tfoot>
             </table>
           </div>
+
+          {report.promos.length > 0 && (
+            <>
+              <h2 className="agenda-title">Descuentos por tipo y promoción</h2>
+              <div className="table-wrap" style={{ maxWidth: 520 }}>
+                <table className="table">
+                  <thead><tr><th>Descuento</th><th>Veces</th><th>Valor</th></tr></thead>
+                  <tbody>
+                    {report.promos.map(p => <tr key={p.label}><td>{p.label}</td><td>{p.count}</td><td>{money(p.amount)}</td></tr>)}
+                  </tbody>
+                  <tfoot><tr><th>Total</th><th>{report.promos.reduce((s, p) => s + p.count, 0)}</th><th>{money(report.totals.discountTotal)}</th></tr></tfoot>
+                </table>
+              </div>
+            </>
+          )}
         </>
       )}
     </>

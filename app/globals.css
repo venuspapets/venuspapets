@@ -140,6 +140,13 @@ textarea { width: 100%; padding: .65rem .8rem; border: 1px solid var(--line); bo
 @media (max-width: 900px) { .week-grid { grid-template-columns: 1fr; } }
 
 .back-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.info-box { margin-top: .5rem; padding: .55rem .8rem; border-radius: 10px; background: #f1eafe; font-size: .9rem; }
+.info-reward { background: #ecfdf3; color: #067647; }
+.badge-ok { background: #d1fadf; color: #067647; }
+.promo { padding: .75rem 0; border-bottom: 1px solid var(--line); }
+.promo-head { margin-bottom: .5rem; }
+.suggest { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-top: .5rem; padding: .6rem .8rem; border: 1px solid var(--line); border-radius: 12px; }
+.suggest-on { border-color: #12b76a; background: #ecfdf3; }
 .btn-danger { background: var(--danger); color: #fff; }
 .line-name { flex: 1 1 200px; font-weight: 600; padding-bottom: .65rem; }
 .plain-list { margin: 0 0 .75rem; padding-left: 1.2rem; display: grid; gap: .25rem; }

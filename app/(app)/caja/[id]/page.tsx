@@ -47,7 +47,7 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
         </table>
         <div className="totals">
           <div><span>Subtotal</span><span>{money(v.subtotal)}</span></div>
-          {v.discount_amount > 0 && <div><span>Descuento ({Number(v.discount_pct)}%)</span><span>− {money(v.discount_amount)}</span></div>}
+          {v.discount_amount > 0 && <div><span>Descuento ({Number(v.discount_pct)}%){v.discount_label ? ' · ' + v.discount_label : ''}</span><span>− {money(v.discount_amount)}</span></div>}
           <div className="grand"><span>Total</span><span>{money(v.total)}</span></div>
         </div>
 
@@ -58,6 +58,7 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
               <li key={p.id}>{p.method_name}: <strong>{money(p.amount)}</strong></li>
             ))}</ul>}
 
+        {v.discount_reason && <p><strong>Motivo del descuento:</strong> {v.discount_reason}</p>}
         {v.notes && <><h3>Notas</h3><p>{v.notes}</p></>}
         {voided && <p className="login-error"><strong>Anulado:</strong> {v.void_reason}</p>}
       </section>

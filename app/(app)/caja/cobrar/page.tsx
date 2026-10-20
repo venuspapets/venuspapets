@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/PageHeader';
 import { priceFor } from '@/lib/pricing';
+import { eligibleDiscounts } from '@/lib/discounts';
 import { dateOf, formatDay, todayStr } from '@/lib/time';
 import { ChargeForm } from './ChargeForm';
 
@@ -46,7 +47,7 @@ export default async function ChargePage({ searchParams }: { searchParams: Promi
 
   const petId = appt?.pet_id ?? params.mascota!;
   const [{ data: pet }, { data: services }, { data: methods }, { data: { user } }] = await Promise.all([
-    supabase.from('pets').select('id, name, breed, size_id, owners(full_name), sizes(name)').eq('id', petId).maybeSingle(),
+    supabase.from('pets').select('id, name, breed, size_id, birthdate, owners(full_name), sizes(name)').eq('id', petId).maybeSingle(),
     supabase.from('services').select('id, name, service_prices(size_id, price), service_breed_prices(breed, price)').eq('active', true).order('name'),
     supabase.from('payment_methods').select('id, name').eq('active', true).order('sort_order'),
     supabase.auth.getUser()
@@ -59,6 +60,7 @@ export default async function ChargePage({ searchParams }: { searchParams: Promi
     .filter((c): c is NonNullable<typeof c> => !!c)
     .map(c => ({ service_id: c.id, name: c.name, price: c.price ?? 0 }));
   const visitDate = appt ? dateOf(appt.starts_at) : todayStr();
+  const discounts = await eligibleDiscounts(supabase, pet, visitDate);
   const owner = pet.owners as unknown as { full_name: string } | null;
   const size = pet.sizes as unknown as { name: string } | null;
 
@@ -79,6 +81,7 @@ export default async function ChargePage({ searchParams }: { searchParams: Promi
           <ChargeForm
             petId={pet.id} appointmentId={appt?.id ?? null} groomerId={appt?.groomer_id ?? user?.id ?? ''} visitDate={visitDate}
             catalog={catalog} methods={methods ?? []} initial={initial}
+            petName={pet.name} bathNumber={discounts.bathNumber} suggestions={discounts.options} best={discounts.best}
           />
         </section>
       )}
