@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { parseWhole, type FormState } from '@/lib/form';
+import { normalizePhone } from '@/lib/phone';
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? '').trim();
 const done = (ok: string): FormState => {
@@ -14,12 +15,6 @@ const failed = (message: string, code?: string): FormState => ({
 });
 
 /* ------------------------------- Negocio ------------------------------- */
-
-/** Deja solo dígitos y agrega el 57 de Colombia a un celular de 10 dígitos. */
-function normalizePhone(raw: string) {
-  const digits = raw.replace(/\D/g, '');
-  return digits.length === 10 && digits.startsWith('3') ? '57' + digits : digits;
-}
 
 export async function saveBusiness(_prev: FormState, fd: FormData): Promise<FormState> {
   const supabase = await requireAdmin();

@@ -32,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <nav>
           <a href="/">Inicio</a>
+          <a href="/clientes">Clientes</a>
           {profile.role === 'admin' && <a href="/configuracion">Configuración</a>}
           <a href="/cuenta">Mi cuenta</a>
           <a href={supportLink} target="_blank" rel="noopener noreferrer">Soporte</a>
