@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Gatito">
+  <polygon points="24,52 28,12 58,34" fill="#f0a96b"/>
+  <polygon points="96,52 92,12 62,34" fill="#f0a96b"/>
+  <polygon points="31,44 33,23 49,35" fill="#ffb3c1"/>
+  <polygon points="89,44 87,23 71,35" fill="#ffb3c1"/>
+  <circle cx="60" cy="68" r="37" fill="#f6b97f"/>
+  <path d="M60 33 v13 M50 35 l2 11 M70 35 l-2 11" stroke="#d98a4a" stroke-width="3.5" stroke-linecap="round"/>
+  <ellipse cx="44" cy="66" rx="5.5" ry="6.5" fill="#2b2233"/>
+  <ellipse cx="76" cy="66" rx="5.5" ry="6.5" fill="#2b2233"/>
+  <circle cx="45.8" cy="63.6" r="2" fill="#fff"/>
+  <circle cx="77.8" cy="63.6" r="2" fill="#fff"/>
+  <ellipse cx="32" cy="78" rx="6" ry="4" fill="#ff9fb3" opacity=".6"/>
+  <ellipse cx="88" cy="78" rx="6" ry="4" fill="#ff9fb3" opacity=".6"/>
+  <polygon points="55,77 65,77 60,83" fill="#ff7d96"/>
+  <path d="M60 83 v4 M60 87 q-6 5 -11 1 M60 87 q6 5 11 1" stroke="#2b2233" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M30 82 l-18 -4 M30 87 l-18 3 M90 82 l18 -4 M90 87 l18 3" stroke="#8c6a50" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

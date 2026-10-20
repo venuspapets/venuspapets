@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { parseWhole, type FormState } from '@/lib/form';
 import { normalizePhone } from '@/lib/phone';
+import { toMinutes } from '@/lib/time';
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? '').trim();
 const done = (ok: string): FormState => {
@@ -21,7 +22,21 @@ export async function saveBusiness(_prev: FormState, fd: FormData): Promise<Form
   const business_name = text(fd, 'business_name');
   if (!business_name) return { error: 'El nombre del negocio es obligatorio.' };
 
+  const hours: Record<string, { open: boolean; from: string; to: string }> = {};
+  for (let d = 0; d < 7; d++) {
+    const from = text(fd, 'from_' + d);
+    const to = text(fd, 'to_' + d);
+    const open = fd.get('open_' + d) === 'on';
+    if (!/^d{2}:d{2}$/.test(from) || !/^d{2}:d{2}$/.test(to)) return { error: 'Revisa las horas del horario de atención.' };
+    if (open && toMinutes(from) >= toMinutes(to)) return { error: 'En cada día de atención la hora de cierre debe ser mayor que la de apertura.' };
+    hours[String(d)] = { open, from, to };
+  }
+  const slot_minutes = parseWhole(fd.get('slot_minutes'));
+  if (!slot_minutes || slot_minutes < 5 || slot_minutes > 120) return { error: 'El espacio entre citas debe estar entre 5 y 120 minutos.' };
+
   const { error } = await supabase.from('settings').update({
+    business_hours: hours,
+    slot_minutes,
     business_name,
     owner_name: text(fd, 'owner_name'),
     owner_phone: normalizePhone(text(fd, 'owner_phone')),

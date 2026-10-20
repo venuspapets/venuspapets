@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { EmptyState } from '@/components/EmptyState';
 import { PageHeader } from '@/components/PageHeader';
 
 type Row = { id: string; full_name: string; whatsapp: string; active: boolean; pets: { id: string; name: string; active: boolean }[] };
@@ -42,10 +43,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       </p>
 
       {owners.length === 0 && (
-        <div className="empty">
-          <strong>{q ? 'No encontramos resultados.' : 'Todavía no hay clientes.'}</strong>
-          <p>{q ? 'Prueba con otro nombre o número.' : 'Aquí puedes registrar a tus clientes y sus mascotas. Pulsa “Nuevo cliente” para crear el primero.'}</p>
-        </div>
+        <EmptyState title={q ? 'No encontramos resultados.' : 'Todavía no hay clientes.'} pet={q ? 'gato' : 'perro'}>{q ? 'Prueba con otro nombre o número.' : 'Aquí puedes registrar a tus clientes y sus mascotas. Pulsa “Nuevo cliente” para crear el primero.'}</EmptyState>
       )}
 
       {owners.length > 0 && (

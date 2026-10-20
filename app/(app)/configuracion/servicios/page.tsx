@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/PageHeader';
+import { EmptyState } from '@/components/EmptyState';
 import { ActionForm } from '@/components/ActionForm';
 import { addBreedPrice, removeBreedPrice, saveService } from '../actions';
 
@@ -59,10 +60,7 @@ export default async function ServicesPage() {
       />
 
       {list.length === 0 && (
-        <div className="empty">
-          <strong>Todavía no hay servicios.</strong>
-          <p>Aquí puedes crear los servicios y sus precios, por ejemplo “Baño completo” o “Corte de uñas”. Usa el formulario de abajo para crear el primero.</p>
-        </div>
+        <EmptyState title="Todavía no hay servicios.">Aquí puedes crear los servicios y sus precios, por ejemplo “Baño completo” o “Corte de uñas”. Usa el formulario de abajo para crear el primero.</EmptyState>
       )}
 
       <section className="panel wide">
