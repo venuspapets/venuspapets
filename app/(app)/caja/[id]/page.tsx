@@ -12,13 +12,13 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const supabase = await createClient();
   const { data: v } = await supabase.from('visits')
-    .select('*, pets(id, name, owners(id, full_name)), visit_items(id, name, price), visit_payments(id, method_name, amount)')
+    .select('*, pets(id, name, photo_path, owners(id, full_name)), visit_items(id, name, price), visit_payments(id, method_name, amount)')
     .eq('id', id).maybeSingle();
   if (!v) notFound();
 
   const admin = await isAdmin();
-  const pet = v.pets as { id: string; name: string; owners: { id: string; full_name: string } };
-  const photoUrl = v.photo_path ? (await supabase.storage.from('pet-photos').createSignedUrl(v.photo_path, 3600)).data?.signedUrl : null;
+  const pet = v.pets as { id: string; name: string; photo_path: string | null; owners: { id: string; full_name: string } };
+  const photoUrl = pet.photo_path ? (await supabase.storage.from('pet-photos').createSignedUrl(pet.photo_path, 3600)).data?.signedUrl : null;
   const voided = v.status === 'anulado';
 
   return (
@@ -27,9 +27,11 @@ export default async function VisitPage({ params }: { params: Promise<{ id: stri
         title={`Cobro de ${pet.name}`}
         description="Detalle de un servicio cobrado. Los cobros no se borran: si hubo un error, el administrador puede anularlo indicando el motivo y queda en el historial."
       />
-      <p>
-        <Link href={`/caja?fecha=${v.visit_date}`}>← Volver a caja</Link> · <Link href={`/clientes/${pet.owners.id}`}>{pet.owners.full_name}</Link> · {formatDay(v.visit_date)}
-      </p>
+      <div className="back-bar">
+        <Link className="btn btn-ghost" href={`/caja?fecha=${v.visit_date}`}>← Volver a caja</Link>
+        <Link className="btn btn-ghost" href={`/clientes/${pet.owners.id}`}>{pet.owners.full_name}</Link>
+        <span className="muted">{formatDay(v.visit_date)}</span>
+      </div>
 
       <section className="panel wide">
         <h2>{pet.name} {voided && <span className="badge badge-warn">Anulado</span>}</h2>

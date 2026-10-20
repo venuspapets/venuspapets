@@ -25,9 +25,10 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
         title={owner.full_name}
         description="Datos del cliente y sus mascotas. Edita la información y guarda, o agrega una mascota nueva. Si el cliente ya no viene, desmarca “Cliente activo” en lugar de borrarlo."
       />
-      <p><Link href="/clientes">← Volver a clientes</Link>
-        {owner.whatsapp && <> · <a href={whatsappUrl(owner.whatsapp)} target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a></>}
-      </p>
+      <div className="back-bar">
+        <Link className="btn btn-ghost" href="/clientes">← Volver a clientes</Link>
+        {owner.whatsapp && <a className="btn btn-ghost" href={whatsappUrl(owner.whatsapp)} target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a>}
+      </div>
 
       <section className="panel wide">
         <h2>Mascotas</h2>

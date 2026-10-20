@@ -8,8 +8,6 @@ import { parseWhole, type FormState } from '@/lib/form';
 import { isValidDate } from '@/lib/time';
 import { dayTotals } from '@/lib/caja';
 
-const BUCKET = 'pet-photos';
-const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? '').trim();
 const refresh = () => {
   revalidatePath('/caja', 'layout');
@@ -43,26 +41,12 @@ export async function registerVisit(_prev: FormState, fd: FormData): Promise<For
   }
 
   const id = crypto.randomUUID();
-  let photoPath: string | null = null;
-  const photo = fd.get('photo');
-  if (photo instanceof File && photo.size > 0) {
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(photo.type)) return { error: 'La foto debe ser JPG, PNG o WebP.' };
-    if (photo.size > MAX_PHOTO_BYTES) return { error: 'La foto pesa más de 4 MB. Usa una más liviana.' };
-    const ext = photo.type === 'image/png' ? 'png' : photo.type === 'image/webp' ? 'webp' : 'jpg';
-    photoPath = `visits/${id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from(BUCKET).upload(photoPath, photo, { contentType: photo.type });
-    if (error) return { error: 'No se pudo subir la foto.' };
-  }
-
   const { error } = await supabase.rpc('register_visit', {
     p_id: id, p_pet_id: p.pet_id, p_appointment_id: p.appointment_id || null, p_groomer_id: p.groomer_id || null,
-    p_visit_date: p.visit_date, p_discount_pct: p.discount_pct, p_notes: p.notes ?? '', p_photo_path: photoPath,
+    p_visit_date: p.visit_date, p_discount_pct: p.discount_pct, p_notes: p.notes ?? '',
     p_items: p.items, p_payments: p.payments
   });
-  if (error) {
-    if (photoPath) await supabase.storage.from(BUCKET).remove([photoPath]);
-    return { error: friendly(error, 'No se pudo registrar el cobro.') };
-  }
+  if (error) return { error: friendly(error, 'No se pudo registrar el cobro.') };
 
   refresh();
   redirect(`/caja/${id}`);

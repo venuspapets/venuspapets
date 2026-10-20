@@ -23,7 +23,7 @@ export default async function ClosingPage({ searchParams }: { searchParams: Prom
         title="Cierre del día"
         description="Aquí revisas lo cobrado en el día por cada medio de pago y cuentas el efectivo que hay en la caja. El sistema calcula la diferencia. Al cerrar, el día queda guardado y no se pueden cobrar ni anular servicios en esa fecha, salvo que lo reabras."
       />
-      <p><Link href={`/caja?fecha=${date}`}>← Volver a caja</Link> · <Link href="/caja/reportes">Ver reportes</Link></p>
+      <div className="back-bar"><Link className="btn btn-ghost" href={`/caja?fecha=${date}`}>← Volver a caja</Link><Link className="btn btn-ghost" href="/caja/reportes">Ver reportes</Link></div>
       <h2 className="agenda-title">{formatDay(date)}</h2>
 
       <section className="panel wide">

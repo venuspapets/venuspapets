@@ -17,7 +17,7 @@ export default async function NewAppointmentPage({ searchParams }: { searchParam
         title="Nueva cita"
         description="Elige la mascota, la fecha, la hora y los servicios. La duración se calcula sola según el tamaño y los servicios, pero puedes cambiarla. Si la cita queda muy cerca de otra o fuera del horario, te avisaremos y tú decides si agendarla igual."
       />
-      <p><Link href={`/agenda?fecha=${date}`}>← Volver a la agenda</Link></p>
+      <div className="back-bar"><Link className="btn btn-ghost" href={`/agenda?fecha=${date}`}>← Volver a la agenda</Link></div>
 
       {pets.length === 0 ? (
         <EmptyState title="Primero registra una mascota" pet="gato">

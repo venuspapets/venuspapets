@@ -36,10 +36,11 @@ export default async function AppointmentPage({ params }: { params: Promise<{ id
         title={`Cita de ${pet.name}`}
         description="Cambia la fecha, la hora, los servicios o el estado de la cita. Marca “Cancelada” o “No asistió” en lugar de borrarla, así queda en el historial."
       />
-      <p>
-        <Link href={`/agenda?fecha=${date}`}>← Volver a la agenda</Link> · <Link href={`/clientes/${pet.owners.id}`}>{pet.owners.full_name}</Link>
-        {pet.owners.whatsapp && <> · <a href={whatsappUrl(pet.owners.whatsapp, reminder)} target="_blank" rel="noopener noreferrer">Recordar por WhatsApp</a></>}
-      </p>
+      <div className="back-bar">
+        <Link className="btn btn-ghost" href={`/agenda?fecha=${date}`}>← Volver a la agenda</Link>
+        <Link className="btn btn-ghost" href={`/clientes/${pet.owners.id}`}>{pet.owners.full_name}</Link>
+        {pet.owners.whatsapp && <a className="btn btn-ghost" href={whatsappUrl(pet.owners.whatsapp, reminder)} target="_blank" rel="noopener noreferrer">Recordar por WhatsApp</a>}
+      </div>
       {appt.status === 'agendada' && (
         <p><Link className="btn btn-primary" href={`/caja/cobrar?cita=${appt.id}`}>Atender y cobrar</Link></p>
       )}

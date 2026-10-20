@@ -19,7 +19,7 @@ export default async function NewPetPage({ params }: { params: Promise<{ id: str
         title="Nueva mascota"
         description={`Registra a la mascota de ${owner.full_name}. El tamaño define el precio de los servicios y la duración de la cita; las alergias y el temperamento ayudan al groomer a atenderla bien.`}
       />
-      <p><Link href={`/clientes/${id}`}>← Volver al cliente</Link></p>
+      <div className="back-bar"><Link className="btn btn-ghost" href={`/clientes/${id}`}>← Volver al cliente</Link></div>
       <section className="panel wide">
         <PetForm ownerId={id} sizes={sizes ?? []} />
       </section>

@@ -24,7 +24,7 @@ export default async function PetPage({ params }: { params: Promise<{ id: string
         title={pet.name}
         description="Ficha de la mascota: raza, tamaño, temperamento, alergias, corte preferido y foto. El tamaño define el precio de los servicios; “Baño cada” sirve para avisarle al dueño cuando le toca volver."
       />
-      <p><Link href={`/clientes/${owner.id}`}>← {owner.full_name}</Link></p>
+      <div className="back-bar"><Link className="btn btn-ghost" href={`/clientes/${owner.id}`}>← {owner.full_name}</Link></div>
 
       <section className="panel wide">
         <h2>Datos de la mascota</h2>

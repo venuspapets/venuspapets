@@ -24,7 +24,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         title="Reportes de caja"
         description="Elige un rango de fechas para ver, día por día, cuántos servicios se cobraron, el total, lo recibido por cada medio de pago y los datos del cierre (efectivo contado y diferencia). Puedes descargarlo para Excel o imprimirlo."
       />
-      <p className="no-print"><Link href="/caja">← Volver a caja</Link></p>
+      <div className="back-bar no-print"><Link className="btn btn-ghost" href="/caja">← Volver a caja</Link></div>
 
       <form action="/caja/reportes" className="toolbar no-print">
         <div className="row-form">

@@ -68,9 +68,10 @@ export default async function ChargePage({ searchParams }: { searchParams: Promi
         title={`Cobrar a ${pet.name}`}
         description="Revisa los servicios y sus precios (puedes cambiar el valor de una línea o agregar más), aplica un descuento en porcentaje si corresponde y elige cómo pagó el cliente. Si pagó con varios medios, usa “Pagar con otro medio”."
       />
-      <p>
-        <Link href="/caja">← Volver a caja</Link> · {owner?.full_name}{size && ` · ${size.name}`} · {formatDay(visitDate)}
-      </p>
+      <div className="back-bar">
+        <Link className="btn btn-ghost" href="/caja">← Volver a caja</Link>
+        <span className="muted">{owner?.full_name}{size && ` · ${size.name}`} · {formatDay(visitDate)}</span>
+      </div>
       {(methods ?? []).length === 0 ? (
         <p className="login-error">No hay medios de pago activos. Créalos en Configuración → Pagos y gastos.</p>
       ) : (

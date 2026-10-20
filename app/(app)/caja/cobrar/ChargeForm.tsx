@@ -43,8 +43,6 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
 
   function submit() {
     const fd = new FormData();
-    const photo = formRef.current?.elements.namedItem('photo') as HTMLInputElement | null;
-    if (photo?.files?.[0]) fd.set('photo', photo.files[0]);
     fd.set('payload', JSON.stringify({
       pet_id: petId, appointment_id: appointmentId, groomer_id: groomerId, visit_date: visitDate,
       discount_pct: pct, notes,
@@ -121,12 +119,7 @@ export function ChargeForm({ petId, appointmentId, groomerId, visitDate, catalog
         </>
       )}
 
-      <div className="field" style={{ marginTop: '1rem' }}>
-        <label htmlFor="photo">Foto de la mascota (opcional)</label>
-        <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" />
-        <small className="muted">Una foto que permita identificar a la mascota. JPG, PNG o WebP de hasta 4 MB.</small>
-      </div>
-      <div className="field"><label htmlFor="notes">Notas del servicio</label><textarea id="notes" rows={2} value={notes} onChange={e => setNotes(e.target.value)} /></div>
+      <div className="field" style={{ marginTop: '1rem' }}><label htmlFor="notes">Notas del servicio</label><textarea id="notes" rows={2} value={notes} onChange={e => setNotes(e.target.value)} /></div>
 
       {state?.error && <div className="login-error" role="alert">{state.error}</div>}
       <div className="form-actions">
