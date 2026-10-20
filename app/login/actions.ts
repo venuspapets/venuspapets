@@ -4,8 +4,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { validateNewPassword } from '@/lib/password';
+import type { FormState } from '@/lib/form';
 
-export type FormState = { error?: string; ok?: string } | null;
 
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get('email') ?? '').trim();

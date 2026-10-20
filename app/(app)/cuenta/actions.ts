@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { validateNewPassword } from '@/lib/password';
-import type { FormState } from '@/app/login/actions';
+import type { FormState } from '@/lib/form';
 
 export async function changePassword(_prev: FormState, formData: FormData): Promise<FormState> {
   const current = String(formData.get('current') ?? '');

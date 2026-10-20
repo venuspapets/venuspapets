@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { PageHeader } from '@/components/PageHeader';
 import { PasswordInput } from '@/components/PasswordInput';
 import { MIN_PASSWORD_LENGTH } from '@/lib/password';
 import { supportLink } from '@/lib/contact';
@@ -11,7 +12,10 @@ export default function AccountPage() {
 
   return (
     <>
-      <h1>Mi cuenta</h1>
+      <PageHeader
+        title="Mi cuenta"
+        description="Aquí puedes cambiar tu contraseña y contactar a soporte si tienes algún problema con el sistema."
+      />
       <section className="panel">
         <h2>Cambiar contraseña</h2>
         <p className="muted">Mínimo {MIN_PASSWORD_LENGTH} caracteres.</p>
