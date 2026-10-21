@@ -1,0 +1,57 @@
+name: Respaldo semanal
+
+on:
+  schedule:
+    # Domingo 22:00 hora de Colombia (lunes 03:00 UTC).
+    - cron: '0 3 * * 1'
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+      BACKUP_TO: ${{ secrets.BACKUP_TO }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Exportar los datos
+        id: export
+        run: node scripts/backup.mjs
+
+      - name: Cifrar el respaldo
+        run: |
+          FILE="respaldo-venuspa-$(TZ=America/Bogota date +%F).json.enc"
+          echo "ENC_FILE=$FILE" >> "$GITHUB_ENV"
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in backup.json -out "$FILE" -pass env:BACKUP_PASSWORD
+          rm backup.json
+
+      - name: Guardar una copia en GitHub (90 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-cifrado
+          path: ${{ env.ENC_FILE }}
+          retention-days: 90
+
+      - name: Enviar por correo
+        run: node scripts/send-backup.mjs --file "$ENC_FILE" --kilobytes "${{ steps.export.outputs.kilobytes }}"
+
+      - name: Avisar si falló
+        if: failure()
+        run: node scripts/send-backup.mjs --failed

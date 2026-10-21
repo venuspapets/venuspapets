@@ -27,7 +27,8 @@ export const ACTION_LABELS: Record<string, string> = {
   'config.catalogo': 'Medios de pago y gastos',
   'config.descuentos': 'Reglas de descuento',
   'config.promocion': 'Promociones',
-  'respaldo.descargado': 'Respaldo descargado'
+  'respaldo.descargado': 'Respaldo descargado',
+  'respaldo.automatico': 'Respaldo automático'
 };
 
 /**

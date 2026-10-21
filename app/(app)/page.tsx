@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/PageHeader';
+import { isAdmin } from '@/lib/auth';
+import { BACKUP_ALERT_DAYS, lastBackups } from '@/lib/backups';
 import { statusLabel } from '@/lib/appointments';
 import { addDays, addMinutesIso, formatDay, timeOf, toStartsAt, todayStr } from '@/lib/time';
 
@@ -16,12 +18,25 @@ export default async function Home() {
     .order('starts_at');
   const appts = (data ?? []) as unknown as Appt[];
 
+  // Solo el administrador ve este aviso: si hace tiempo que no hay respaldo.
+  const admin = await isAdmin();
+  const backup = admin ? await lastBackups(supabase) : null;
+  const backupLate = backup && (backup.daysSince === null || backup.daysSince > BACKUP_ALERT_DAYS);
+
   return (
     <>
       <PageHeader
         title="Inicio"
         description="Este es el panel principal. Aquí ves las citas de hoy y los accesos rápidos. Desde el menú de la izquierda entras a cada módulo; empieza por Configuración para dejar listos tus servicios, precios y horario."
       />
+
+      {backupLate && (
+        <div className="alert-banner" role="alert">
+          <strong>Falta una copia de seguridad.</strong>{' '}
+          {backup.daysSince === null ? 'Todavía no hay ninguna registrada.' : `La última fue hace ${backup.daysSince} días.`}{' '}
+          <Link href="/configuracion/respaldo">Ver respaldo</Link>
+        </div>
+      )}
 
       <section className="hero">
         <img src="/perro.svg" alt="" width={110} height={110} />
