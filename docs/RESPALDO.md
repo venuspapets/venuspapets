@@ -8,6 +8,8 @@ Cada domingo a las 10 p. m. (hora de Colombia) GitHub ejecuta `.github/workflows
 4. Si algo falla, se envía un correo de aviso y GitHub también notifica.
 5. Queda una anotación en el registro de actividad de la app; si pasan más de 10 días sin respaldo, el administrador ve un aviso en Inicio.
 
+> **Estado: en pausa.** El horario semanal está comentado en el workflow y el aviso de Inicio desactivado (`BACKUP_ALERT_ENABLED` en `lib/backups.ts`). Al configurar los secretos: descomentar el `schedule` del workflow y poner esa constante en `true`.
+
 ## Configuración (una sola vez)
 
 En el repositorio de GitHub: **Settings → Secrets and variables → Actions → New repository secret**.

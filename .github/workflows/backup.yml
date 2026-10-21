@@ -1,9 +1,10 @@
 name: Respaldo semanal
 
 on:
-  schedule:
-    # Domingo 22:00 hora de Colombia (lunes 03:00 UTC).
-    - cron: '0 3 * * 1'
+  # EN PAUSA hasta configurar los secretos (ver docs/RESPALDO.md). Para activarlo, quitar los # de las 3 líneas siguientes.
+  # schedule:
+  #   # Domingo 22:00 hora de Colombia (lunes 03:00 UTC).
+  #   - cron: '0 3 * * 1'
   workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
 
 permissions:

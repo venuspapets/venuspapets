@@ -1,5 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+/** Poner en true cuando el respaldo automático esté configurado (ver docs/RESPALDO.md). */
+export const BACKUP_ALERT_ENABLED = false;
+
 /** Días después de los cuales se avisa al administrador que falta un respaldo (el automático es semanal). */
 export const BACKUP_ALERT_DAYS = 10;
 

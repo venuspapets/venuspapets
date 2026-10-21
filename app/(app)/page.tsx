@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/PageHeader';
 import { isAdmin } from '@/lib/auth';
-import { BACKUP_ALERT_DAYS, lastBackups } from '@/lib/backups';
+import { BACKUP_ALERT_DAYS, BACKUP_ALERT_ENABLED, lastBackups } from '@/lib/backups';
 import { statusLabel } from '@/lib/appointments';
 import { addDays, addMinutesIso, formatDay, timeOf, toStartsAt, todayStr } from '@/lib/time';
 
@@ -19,7 +19,7 @@ export default async function Home() {
   const appts = (data ?? []) as unknown as Appt[];
 
   // Solo el administrador ve este aviso: si hace tiempo que no hay respaldo.
-  const admin = await isAdmin();
+  const admin = BACKUP_ALERT_ENABLED && await isAdmin();
   const backup = admin ? await lastBackups(supabase) : null;
   const backupLate = backup && (backup.daysSince === null || backup.daysSince > BACKUP_ALERT_DAYS);
 
