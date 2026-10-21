@@ -5,9 +5,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { parseWhole } from '@/lib/form';
 import { normalizeHours } from '@/lib/hours';
-import { STATUSES } from '@/lib/appointments';
+import { STATUSES, statusLabel } from '@/lib/appointments';
 import { logActivity } from '@/lib/activity';
-import { DAY_NAMES, addDays, isValidDate, timeOf, toMinutes, toStartsAt, weekday } from '@/lib/time';
+import { DAY_NAMES, addDays, dateOf, isValidDate, timeOf, toMinutes, toStartsAt, weekday } from '@/lib/time';
 
 export type AppointmentState = { error?: string; ok?: string; warnings?: string[] } | null;
 
@@ -100,4 +100,32 @@ export async function saveAppointment(_prev: AppointmentState, fd: FormData): Pr
   revalidatePath('/');
   if (!id) redirect(`/agenda?fecha=${date}`);
   return { ok: 'Cita guardada.' };
+}
+
+/** Elimina una cita que sigue programada. Las demás son historial y no se tocan. */
+export async function deleteAppointment(_prev: AppointmentState, fd: FormData): Promise<AppointmentState> {
+  const supabase = await createClient();
+  const id = text(fd, 'id');
+
+  const { data: appt } = await supabase.from('appointments')
+    .select('id, status, starts_at, duration_minutes, pet_id, pets(name)').eq('id', id).maybeSingle();
+  if (!appt) return { error: 'La cita no existe o ya fue eliminada.' };
+  if (appt.status !== 'agendada') {
+    return { error: 'Solo se pueden eliminar citas programadas. Esta ya está marcada como ' + statusLabel(appt.status).toLowerCase() + '.' };
+  }
+
+  const { error } = await supabase.from('appointments').delete().eq('id', id);
+  if (error) return { error: error.code === 'P0001' ? error.message : 'No se pudo eliminar la cita.' };
+
+  const date = dateOf(appt.starts_at);
+  const petName = (appt.pets as unknown as { name: string } | null)?.name ?? 'una mascota';
+  await logActivity(supabase, {
+    action: 'cita.eliminada', entity: 'appointment', entityId: id,
+    summary: `Eliminó la cita de ${petName} del ${date} a las ${timeOf(appt.starts_at)}`,
+    details: { date, time: timeOf(appt.starts_at), duration: appt.duration_minutes, pet_id: appt.pet_id }
+  });
+
+  revalidatePath('/agenda', 'layout');
+  revalidatePath('/');
+  redirect(`/agenda?fecha=${date}`);
 }

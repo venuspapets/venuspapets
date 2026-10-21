@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { whatsappUrl } from '@/lib/phone';
 import { dateOf, formatDay, timeOf } from '@/lib/time';
 import { AppointmentForm } from '../AppointmentForm';
+import { DeleteAppointment } from '../DeleteAppointment';
 import { loadFormOptions } from '../options';
 
 export default async function AppointmentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -54,6 +55,14 @@ export default async function AppointmentPage({ params }: { params: Promise<{ id
           }}
         />
       </section>
+
+      {appt.status === 'agendada' && (
+        <section className="panel wide">
+          <h2>Eliminar cita</h2>
+          <p className="muted">Úsalo si la cita se agendó por error. Si el cliente avisó que no viene, es mejor marcarla como “Cancelada” para que quede en el historial.</p>
+          <DeleteAppointment id={appt.id} petName={pet.name} when={`${formatDay(date)} a las ${time}`} />
+        </section>
+      )}
     </>
   );
 }

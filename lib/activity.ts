@@ -17,6 +17,7 @@ export const ACTION_LABELS: Record<string, string> = {
   'caja.reapertura': 'Cierre reabierto',
   'cita.creada': 'Cita creada',
   'cita.editada': 'Cita editada',
+  'cita.eliminada': 'Cita eliminada',
   'cliente.creado': 'Cliente creado',
   'cliente.editado': 'Cliente editado',
   'mascota.creada': 'Mascota creada',
