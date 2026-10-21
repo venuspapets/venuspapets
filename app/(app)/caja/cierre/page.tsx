@@ -34,6 +34,9 @@ export default async function ClosingPage({ searchParams }: { searchParams: Prom
             <div className="stat" key={m}><span className="muted">{m}</span><strong>{money(v)}</strong></div>
           ))}
         </div>
+        <p className="muted">
+          Efectivo cobrado {money(totals.cashIncome)}{totals.cashExpenses > 0 && <> − gastos pagados de la caja {money(totals.cashExpenses)}</>} = <strong>{money(totals.expectedCash)}</strong> esperados en la caja.
+        </p>
         {(voided ?? 0) > 0 && <p className="muted">Cobros anulados este día: {voided} (no cuentan en los totales).</p>}
 
         <ClosingForm

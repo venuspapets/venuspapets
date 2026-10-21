@@ -22,12 +22,12 @@ export async function GET(request: Request) {
   const r = await buildReport(supabase, from, to);
   const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
   const rows: (string | number)[][] = [
-    ['Fecha', 'Servicios', 'Anulados', 'Total', 'Descuentos', ...r.methods, ...r.discountTypes.map(t => 'Desc. ' + DISCOUNT_TYPE_LABELS[t]), 'Efectivo esperado', 'Efectivo contado', 'Diferencia', 'Cierre', 'Cerrado por', 'Notas'],
+    ['Fecha', 'Servicios', 'Anulados', 'Total', 'Descuentos', ...r.methods, ...r.discountTypes.map(t => 'Desc. ' + DISCOUNT_TYPE_LABELS[t]), 'Gastos de caja', 'Efectivo esperado', 'Efectivo contado', 'Diferencia', 'Cierre', 'Cerrado por', 'Notas'],
     ...r.days.map(d => [
       d.date, d.count, d.voidedCount, d.total, d.discountTotal, ...r.methods.map(m => d.byMethod[m] ?? 0), ...r.discountTypes.map(t => d.discountByType[t] ?? 0),
-      d.expectedCash, d.counted ?? '', d.difference ?? '', d.closed ? 'Cerrado' : 'Sin cerrar', d.closedBy, d.notes
+      d.cashExpenses, d.expectedCash, d.counted ?? '', d.difference ?? '', d.closed ? 'Cerrado' : 'Sin cerrar', d.closedBy, d.notes
     ]),
-    ['TOTAL', r.totals.count, r.totals.voidedCount, r.totals.total, r.totals.discountTotal, ...r.methods.map(m => r.totals.byMethod[m] ?? 0), ...r.discountTypes.map(t => r.totals.discountByType[t] ?? 0), r.totals.expectedCash, '', '', '', '', ''],
+    ['TOTAL', r.totals.count, r.totals.voidedCount, r.totals.total, r.totals.discountTotal, ...r.methods.map(m => r.totals.byMethod[m] ?? 0), ...r.discountTypes.map(t => r.totals.discountByType[t] ?? 0), r.totals.cashExpenses, r.totals.expectedCash, '', '', '', '', ''],
     [],
     ['Descuentos por tipo y promoción', 'Veces', 'Valor'],
     ...r.promos.map(p => [p.label, p.count, p.amount])

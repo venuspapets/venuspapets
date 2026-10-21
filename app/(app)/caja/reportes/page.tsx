@@ -52,7 +52,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                   <th>Fecha</th><th>Servicios</th><th>Total</th><th>Descuentos</th>
                   {report.methods.map(m => <th key={m}>{m}</th>)}
                   {report.discountTypes.map(t => <th key={t}>Desc. {DISCOUNT_TYPE_LABELS[t]}</th>)}
-                  <th>Efectivo esperado</th><th>Efectivo contado</th><th>Diferencia</th><th>Cierre</th>
+                  <th>Gastos de caja</th><th>Efectivo esperado</th><th>Efectivo contado</th><th>Diferencia</th><th>Cierre</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,6 +64,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                     <td>{money(d.discountTotal)}</td>
                     {report.methods.map(m => <td key={m}>{money(d.byMethod[m] ?? 0)}</td>)}
                     {report.discountTypes.map(t => <td key={t}>{money(d.discountByType[t] ?? 0)}</td>)}
+                    <td>{money(d.cashExpenses)}</td>
                     <td>{money(d.expectedCash)}</td>
                     <td>{d.counted === null ? '—' : money(d.counted)}</td>
                     <td className={d.difference ? 'msg-error' : ''}>{d.difference === null ? '—' : money(d.difference)}</td>
@@ -76,7 +77,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                   <th>Total</th><th>{report.totals.count}</th><th>{money(report.totals.total)}</th><th>{money(report.totals.discountTotal)}</th>
                   {report.methods.map(m => <th key={m}>{money(report.totals.byMethod[m] ?? 0)}</th>)}
                   {report.discountTypes.map(t => <th key={t}>{money(report.totals.discountByType[t] ?? 0)}</th>)}
-                  <th>{money(report.totals.expectedCash)}</th><th /><th /><th />
+                  <th>{money(report.totals.cashExpenses)}</th><th>{money(report.totals.expectedCash)}</th><th /><th /><th />
                 </tr>
               </tfoot>
             </table>

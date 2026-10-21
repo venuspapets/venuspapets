@@ -19,16 +19,21 @@ export async function dayTotals(supabase: SupabaseClient, date: string) {
       if (pay.is_cash) expectedCash += pay.amount;
     }
   }
+  // Gastos pagados con la plata de la caja ese día (solo los ve el administrador).
+  const { data: exp } = await supabase.from('expenses').select('amount')
+    .eq('expense_date', date).eq('from_cash', true).eq('status', 'registrado');
+  const cashExpenses = (exp ?? []).reduce((sum: number, e: { amount: number }) => sum + e.amount, 0);
+
   return {
     count: visits.length,
     total: visits.reduce((s: number, v: { total: number }) => s + v.total, 0),
     discounts: visits.reduce((s: number, v: { discount_amount: number }) => s + v.discount_amount, 0),
-    byMethod, expectedCash
+    byMethod, cashIncome: expectedCash, cashExpenses, expectedCash: expectedCash - cashExpenses
   };
 }
 
 export type ReportDay = {
-  date: string; count: number; total: number; byMethod: Record<string, number>; expectedCash: number;
+  date: string; count: number; total: number; byMethod: Record<string, number>; expectedCash: number; cashExpenses: number;
   discountTotal: number; discountByType: Record<string, number>;
   voidedCount: number; voidedAmount: number;
   closed: boolean; counted: number | null; difference: number | null; closedBy: string; notes: string;
@@ -39,7 +44,7 @@ export type PromoStat = { label: string; count: number; amount: number };
 export type Report = {
   days: ReportDay[]; methods: string[]; discountTypes: string[]; promos: PromoStat[];
   totals: {
-    count: number; total: number; byMethod: Record<string, number>; expectedCash: number;
+    count: number; total: number; byMethod: Record<string, number>; expectedCash: number; cashExpenses: number;
     discountTotal: number; discountByType: Record<string, number>; voidedCount: number; voidedAmount: number;
   };
 };
@@ -48,12 +53,14 @@ const TYPE_ORDER = ['lealtad', 'cumpleanos', 'temporada', 'manual'];
 
 /** Resumen por día entre dos fechas: cobros por medio de pago, descuentos y los datos del cierre, si existe. */
 export async function buildReport(supabase: SupabaseClient, from: string, to: string): Promise<Report> {
-  const [{ data: visits }, { data: closings }, { data: profiles }] = await Promise.all([
+  const [{ data: visits }, { data: closings }, { data: profiles }, { data: cashExp }] = await Promise.all([
     supabase.from('visits')
       .select('visit_date, total, status, discount_amount, discount_type, discount_label, visit_payments(method_name, is_cash, amount)')
       .gte('visit_date', from).lte('visit_date', to).order('visit_date'),
     supabase.from('cash_closings').select('*').gte('closing_date', from).lte('closing_date', to),
-    supabase.from('profiles').select('id, full_name, role')
+    supabase.from('profiles').select('id, full_name, role'),
+    supabase.from('expenses').select('expense_date, amount').eq('from_cash', true).eq('status', 'registrado')
+      .gte('expense_date', from).lte('expense_date', to)
   ]);
   const names = new Map((profiles ?? []).map(p => [p.id, groomerName(p)]));
 
@@ -63,7 +70,7 @@ export async function buildReport(supabase: SupabaseClient, from: string, to: st
     let d = days.get(date);
     if (!d) {
       d = {
-        date, count: 0, total: 0, byMethod: {}, expectedCash: 0, discountTotal: 0, discountByType: {},
+        date, count: 0, total: 0, byMethod: {}, expectedCash: 0, cashExpenses: 0, discountTotal: 0, discountByType: {},
         voidedCount: 0, voidedAmount: 0, closed: false, counted: null, difference: null, closedBy: '', notes: ''
       };
       days.set(date, d);
@@ -92,6 +99,11 @@ export async function buildReport(supabase: SupabaseClient, from: string, to: st
       promoMap.set(label, stat);
     }
   }
+  for (const e of cashExp ?? []) {
+    const d = day(e.expense_date);
+    d.cashExpenses += e.amount;
+    d.expectedCash -= e.amount;
+  }
   for (const c of closings ?? []) {
     const d = day(c.closing_date);
     d.closed = true;
@@ -107,10 +119,10 @@ export async function buildReport(supabase: SupabaseClient, from: string, to: st
   const discountTypes = TYPE_ORDER.filter(t => usedTypes.has(t));
 
   const totals: Report['totals'] = {
-    count: 0, total: 0, byMethod: {}, expectedCash: 0, discountTotal: 0, discountByType: {}, voidedCount: 0, voidedAmount: 0
+    count: 0, total: 0, byMethod: {}, expectedCash: 0, cashExpenses: 0, discountTotal: 0, discountByType: {}, voidedCount: 0, voidedAmount: 0
   };
   for (const d of list) {
-    totals.count += d.count; totals.total += d.total; totals.expectedCash += d.expectedCash;
+    totals.count += d.count; totals.total += d.total; totals.expectedCash += d.expectedCash; totals.cashExpenses += d.cashExpenses;
     totals.discountTotal += d.discountTotal;
     totals.voidedCount += d.voidedCount; totals.voidedAmount += d.voidedAmount;
     for (const [m, v] of Object.entries(d.byMethod)) totals.byMethod[m] = (totals.byMethod[m] ?? 0) + v;

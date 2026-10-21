@@ -128,7 +128,7 @@ export async function closeDay(_prev: FormState, fd: FormData): Promise<FormStat
   const t = await dayTotals(supabase, date);
   const { error } = await supabase.from('cash_closings').insert({
     closing_date: date, visits_count: t.count, total_income: t.total, by_method: t.byMethod,
-    expected_cash: t.expectedCash, counted_cash: counted, difference: counted === null ? null : counted - t.expectedCash,
+    cash_expenses: t.cashExpenses, expected_cash: t.expectedCash, counted_cash: counted, difference: counted === null ? null : counted - t.expectedCash,
     notes: text(fd, 'notes')
   });
   if (error) return { error: error.code === '23505' ? 'Este día ya está cerrado.' : 'No se pudo cerrar el día.' };
