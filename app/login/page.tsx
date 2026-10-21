@@ -1,11 +1,14 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { login } from './actions';
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, null);
   const [show, setShow] = useState(false);
+
+  // Una nueva sesión vuelve a mostrar el aviso de recordatorios al entrar.
+  useEffect(() => { try { sessionStorage.removeItem('recordatorios-aviso'); } catch { /* sin almacenamiento */ } }, []);
 
   return (
     <main className="login-wrap">

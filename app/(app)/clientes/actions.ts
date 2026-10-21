@@ -31,21 +31,27 @@ export async function saveOwner(_prev: WarnState, fd: FormData): Promise<WarnSta
   const referred_by = text(fd, 'referred_by') || null;
   if (referred_by && referred_by === id) return { error: 'Un cliente no puede referirse a sí mismo.' };
 
+  // Estado anterior del cliente (para la constancia de autorización y el aviso de duplicados).
+  let before: { whatsapp: string; full_name: string; consent_messages: boolean; consent_at: string | null } | null = null;
+  if (id) {
+    const { data } = await supabase.from('owners').select('whatsapp, full_name, consent_messages, consent_at').eq('id', id).maybeSingle();
+    before = data;
+  }
+
+  // Constancia de la autorización: se anota la fecha en que se activa y se borra al quitarla.
+  const consent = fd.get('consent_messages') === 'on';
+  const consent_at = !consent ? null : before?.consent_messages && before.consent_at ? before.consent_at : new Date().toISOString();
+
   const row = {
     full_name, whatsapp,
     address: text(fd, 'address'),
     birthday: dateOrNull(fd, 'birthday'),
-    consent_messages: fd.get('consent_messages') === 'on',
+    consent_messages: consent, consent_at,
     referred_by,
     notes: text(fd, 'notes')
   };
 
   // Aviso (no bloquea) si el WhatsApp o el nombre ya existen en otro cliente.
-  let before: { whatsapp: string; full_name: string } | null = null;
-  if (id) {
-    const { data } = await supabase.from('owners').select('whatsapp, full_name').eq('id', id).maybeSingle();
-    before = data;
-  }
   if (fd.get('confirm') !== '1') {
     const warnings: string[] = [];
     if (whatsapp && before?.whatsapp !== whatsapp) {

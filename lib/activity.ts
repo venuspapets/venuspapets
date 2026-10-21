@@ -31,6 +31,8 @@ export const ACTION_LABELS: Record<string, string> = {
   'gasto.creado': 'Gasto registrado',
   'gasto.editado': 'Gasto editado',
   'gasto.anulado': 'Gasto anulado',
+  'recordatorio.enviado': 'Recordatorio enviado',
+  'config.recordatorios': 'Reglas de recordatorios',
   'respaldo.descargado': 'Respaldo descargado',
   'respaldo.automatico': 'Respaldo automático'
 };

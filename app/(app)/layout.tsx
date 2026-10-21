@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { logout } from '../login/actions';
 import { supportLink } from '@/lib/contact';
+import { ReminderBell } from '@/components/ReminderBell';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <nav>
           <a href="/">Inicio</a>
           <a href="/agenda">Agenda</a>
+          <a href="/recordatorios">Recordatorios</a>
           <a href="/caja">Caja</a>
           <a href="/clientes">Clientes</a>
           {profile.role === 'admin' && <a href="/gastos">Gastos</a>}
@@ -51,7 +53,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </form>
         </div>
       </aside>
-      <main className="content">{children}</main>
+      <main className="content">
+        <div className="topbar"><ReminderBell /></div>
+        {children}
+      </main>
     </div>
   );
 }

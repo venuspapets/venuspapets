@@ -7,7 +7,7 @@ import { saveOwner } from './actions';
 
 export type OwnerRow = {
   id: string; full_name: string; whatsapp: string; address: string; birthday: string | null;
-  consent_messages: boolean; referred_by: string | null; notes: string; active: boolean;
+  consent_messages: boolean; consent_at?: string | null; referred_by: string | null; notes: string; active: boolean;
 };
 
 export function OwnerForm({ owner, others }: { owner?: OwnerRow; others: { id: string; full_name: string }[] }) {
@@ -52,7 +52,8 @@ export function OwnerForm({ owner, others }: { owner?: OwnerRow; others: { id: s
         </div>
       </div>
       <div className="field"><label htmlFor="notes">Notas</label><textarea id="notes" name="notes" rows={2} defaultValue={owner?.notes} /></div>
-      <label className="check"><input type="checkbox" name="consent_messages" defaultChecked={owner?.consent_messages ?? true} /> Autoriza recibir mensajes por WhatsApp (recordatorios y promociones)</label>
+      <label className="check"><input type="checkbox" name="consent_messages" defaultChecked={owner?.consent_messages ?? false} /> El cliente autoriza recibir mensajes por WhatsApp (recordatorios y promociones)</label>
+      <small className="muted">Actívalo solo si el cliente te dio su permiso. Sin él, no le aparecen recordatorios.{owner?.consent_messages && owner.consent_at && <> Autorizó el {new Date(owner.consent_at).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'long', year: 'numeric' })}.</>}</small>
       {owner && <label className="check"><input type="checkbox" name="active" defaultChecked={owner.active} /> Cliente activo</label>}
 
       {state?.error && <div className="login-error" role="alert">{state.error}</div>}

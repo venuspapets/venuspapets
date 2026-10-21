@@ -235,3 +235,21 @@ export async function removePromotion(_prev: FormState, fd: FormData): Promise<F
   await logActivity(supabase, { action: 'config.promocion', entity: 'promotion', entityId: text(fd, 'id'), summary: 'Quitó una promoción' });
   return done('Promoción quitada.');
 }
+
+/* ------------------------------- Recordatorios ------------------------------- */
+
+export async function saveReminderRules(_prev: FormState, fd: FormData): Promise<FormState> {
+  const supabase = await requireAdmin();
+  const repeat = parseWhole(fd.get('reminder_repeat_days'));
+  const first = parseWhole(fd.get('reactivation_first'));
+  const second = parseWhole(fd.get('reactivation_second'));
+  if (!repeat) return { error: 'Los días para volver a recordar deben ser un número mayor que 0.' };
+  if (!first || !second) return { error: 'Los días de retraso deben ser números mayores que 0.' };
+  if (second <= first) return { error: 'El segundo aviso debe ser después del primero.' };
+
+  const patch = { reminder_repeat_days: repeat, reactivation_first: first, reactivation_second: second };
+  const { error } = await supabase.from('settings').update(patch).eq('id', true);
+  if (error) return failed('No se pudo guardar.');
+  await logActivity(supabase, { action: 'config.recordatorios', entity: 'settings', summary: 'Cambió las reglas de recordatorios', details: patch });
+  return done('Reglas guardadas.');
+}
